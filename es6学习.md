@@ -52,7 +52,7 @@ express框架：
 
 2. 在项目server下执行express -e .  
 
--e表示使用ejs模板引擎  .表示在当前文件夹执行
+   -e表示使用ejs模板引擎  .表示在当前文件夹执行
 
 3. 再执行npm i
 
@@ -129,7 +129,7 @@ ps：gulp4.x版本和3.x版本不一样
 
 22.gulp --watch监听，如果执行gulp则程序执行一次
 
-以上方式太复杂 改用webpack4.x版本打包
+以上gulp方式太复杂 改用webpack4.x版本打包
 
 <https://dbafu.github.io/2018/09/02/%E4%BD%BF%E7%94%A8webpack%E6%90%AD%E5%BB%BAes6%E7%8E%AF%E5%A2%83-20180902/> 
 
@@ -249,7 +249,7 @@ test1();
 
 #### 2.分类
 
-![](C:\Users\Administrator\Pictures\es6\5.JPG)
+数组、对象、字符串、布尔值、函数参数、数值解构赋值
 
 #### 3.规则
 
