@@ -16,7 +16,7 @@ webpack-stream：webpack对gulp的支持
 
 
 
-基础架构
+基础架构：
 
 业务逻辑：页面+交互
 
