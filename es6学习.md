@@ -52,7 +52,7 @@ express框架：
 
 2. 在项目server下执行express -e .  
 
-   -e表示使用ejs模板引擎  .表示在当前文件夹执行
+-e表示使用ejs模板引擎  .表示在当前文件夹执行
 
 3. 再执行npm i
 
