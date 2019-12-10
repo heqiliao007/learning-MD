@@ -149,6 +149,81 @@ babel7.X学习
 
 <https://segmentfault.com/a/1190000017162255?utm_source=tag-newest> 
 
+附
+
+package.json
+
+```
+{
+  "name": "demo",
+  "version": "1.0.0",
+  "description": "",
+  "main": "webpack.config.js",
+  "scripts": {
+    "dev": "webpack-dev-server --config ./webpack.config.js --mode development"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@babel/core": "^7.5.5",
+    "@babel/plugin-proposal-decorators": "^7.6.0",
+    "@babel/polyfill": "^7.4.4",
+    "@babel/preset-env": "^7.5.5",
+    "babel-loader": "^8.0.6",
+    "html-webpack-plugin": "^3.2.0",
+    "webpack": "^4.39.3",
+    "webpack-cli": "^3.3.7",
+    "webpack-dev-server": "^3.8.0"
+  },
+  "dependencies": {
+    "css-loader": "^3.2.0",
+    "style-loader": "^1.0.0"
+  }
+}
+```
+
+webpake.config.js
+
+```
+const path = require('path')
+const HtmlWebpackPlugin = require('html-webpack-plugin')
+
+module.exports = {
+  entry: './src/index.js',
+  output: {
+    path: __dirname, //当前目录
+    filename: './dist/bundle.js'  //自动创建
+  },
+  module: {
+    rules: [
+	    {
+	      test: /\.js?$/,
+	      exclude: /(node_modules)/,
+	      use: {
+	        loader: 'babel-loader'
+	      }
+	    },
+	    {
+		    test: /\.css$/, // 针对CSS结尾的文件设置LOADER
+		    use: ['style-loader', 'css-loader']
+		  }
+    ],
+  },
+  plugins: [
+  	new webpack.optimize.UglifyJsPlugin(),//压缩js插件
+    new HtmlWebpackPlugin({
+      template: './index.html',   // 项目模板
+    })
+  ],
+  devServer: {
+    contentBase: path.join(__dirname, './dist'),  // 根目录
+    publicPath:"/",
+    open: true,  // 自动打开浏览器
+    port: 9000
+  }
+}
+```
+
 ### 二.let和const
 
 #### 作用域概念
@@ -169,7 +244,7 @@ test();
 //第一个i输出1 2  第二个i报错
 
 {
-	console.log(name)//报错未定义
+	console.log(name)//直接报错未定义
     let name = 'bbb';
 }
 ```
@@ -213,6 +288,8 @@ test();
 
 5.循环遍历加监听，使用let取代var是趋势
 
+
+
 ```
 function test1(){
 	//声明一个常量
@@ -229,9 +306,9 @@ test1();
 
 #### const总结
 
-1.常量const不能修改（不严谨），read-only
+1.常量const不能修改/不能重复赋值（不严谨），read-only
 
-但是对象可以修改（因为对象是引用类型，返回的是存储内存的指针（地址），因此，是指针不可以改变是const，但是指向这个指针的对象是可以变化的）
+但是对象可以修改（因为对象是引用类型，返回的是存储内存的指针（地址），因此，是指针不可以改变const，但是指向这个指针的对象是可以变化的）
 
 2.const也有作用域
 
@@ -324,7 +401,7 @@ test1();
 }
 ```
 
-(3).当返回了多个值，只取部分值(后台对象返回多种数据，只取其中一种)
+(3).当返回了多个值，只取部分值(或者后台对象返回多种数据，只取其中一种)
 
 ```
 {
@@ -1159,9 +1236,9 @@ ES6 则是明确将空位转为`undefined`
 
 #### 参数默认值
 
-参数变量`x`是默认声明的，在函数体中，不能用`let`或`const`再次声明，否则会报错 
+- 参数变量`x`是默认声明的，在函数体中，不能用`let`或`const`再次声明，否则会报错 
 
-- [x] 先取作用域内的默认值，如果作用域内没有再向外取值
+- 先取作用域内的默认值，如果作用域内没有再向外取值
 
 ```
 {
@@ -1261,7 +1338,40 @@ es6: 定义时候的对象（不可变的）
 所谓定义时所在的对象，要看箭头函数外层是否有函数
 
 - 如果有，外层函数的this就是内部箭头函数的this
+
 - 如果没有，它所处的对象即是window，则this指向window
+
+  ```
+  //比较es6与es5的this指向的区别
+  {
+  	//es5
+      function fn() {
+          console.log(this) //{a:100}
+          
+          var arr = [1,2,3]
+          arr.map(function(item){
+          	console.log(this) //window
+          })
+          //在这里写setTimeout函数，结果和map函数相同，this也是一样的道理
+      }
+      
+      fn.call({a:100})
+  }
+  
+  {
+  	//es6
+      function fn() {
+          console.log(this) //{a:100}
+          
+          var arr = [1,2,3]
+          arr.map(item => {
+          	console.log(this) //{a:100} 箭头函数外层有函数,外层函数的this就是内部箭头函数的this
+          })
+      }
+      
+      fn.call({a:100})
+  }
+  ```
 
 （2）不可以当作构造函数，也就是说，不可以使用`new`命令，否则会抛出一个错误。
 
@@ -1269,7 +1379,9 @@ es6: 定义时候的对象（不可变的）
 
 （4）不可以使用`yield`命令，因此箭头函数不能用作 Generator 函数。
 
-箭头函数可以与变量解构结合使用 
+（5）不可以使用`super`、`new.target` 
+
+**箭头函数可以与变量解构结合使用** 
 
 ```
 {
@@ -1282,7 +1394,7 @@ es6: 定义时候的对象（不可变的）
 }
 ```
 
- rest 参数与箭头函数结合 
+ **rest 参数与箭头函数结合** 
 
 ```
 {
@@ -1292,28 +1404,6 @@ es6: 定义时候的对象（不可变的）
     // [1,[2,3,4,5]]
 }
 ```
-
-箭头函数转化es5
-
-```
-// ES6
-function foo() {
-  setTimeout(() => {
-    console.log('id:', this.id);
-  }, 100);
-}
-
-// ES5
-function foo() {
-  var _this = this;
-
-  setTimeout(function () {
-    console.log('id:', _this.id);
-  }, 100);
-}
-```
-
-除了`this`，以下三个变量在箭头函数之中也是不存在的，指向外层函数的对应变量：`arguments`、`super`、`new.target` 
 
 #### 尾调用
 
@@ -2253,8 +2343,10 @@ let newVm = new Proxy(vm,{
         }
 })
 
-//问题1，vue2.X里数组改变不能触发视图更新 因为defineProperty劫持不到，只有用$set
-//问题2 vue2.X当属性的值为一对象时，直接添加对象中属性的值时也无法触发set，defineProperty同样劫持不到，只有用$set
+//问题1，vue2.X里数组改变不能触发视图更新 因为defineProperty劫持不到，可以用$set
+//问题2 vue2.X当属性的值为一对象时，直接添加对象中属性的值时也无法触发set，defineProperty同样劫持不到，可以用$set
+https://www.cnblogs.com/mengff/p/8482867.html
+https://www.jianshu.com/p/7b138b71e6fd
 ```
 
 #### Reflect反射对象
@@ -2376,24 +2468,6 @@ Reflect不用new，直接用
 
 通过代理把条件和对象本身（业务逻辑）完全隔离开，比如你还要加mobile、id等条件，后续代码的复壮性、维护会方便很多
 
-##### 实例：使用 Proxy 实现观察者模式(了解)
-
-```
-{
-    const queuedObservers = new Set();
-
-    const observe = fn => queuedObservers.add(fn);
-    const observable = obj => new Proxy(obj, {set});
-
-    function set(target, key, value, receiver) {
-      const result = Reflect.set(target, key, value, receiver);
-      queuedObservers.forEach(observer => observer());
-      return result;
-}
-```
-
-上面代码中，先定义了一个`Set`集合，所有观察者函数都放进这个集合。然后，`observable`函数返回原始对象的代理，拦截赋值操作。拦截函数`set`之中，会自动执行所有观察者 
-
 ### 十三.类与对象
 
 #### 基本定义及生成实例
@@ -2416,6 +2490,14 @@ Reflect不用new，直接用
   	v_parnet.tell();//tell
 }
 ```
+
+Parent.prototype.constructor === Parent //true
+
+v_parnet._________proto_________ === Parent.prototype
+
+typeof Parent //"function"
+
+由此可见，es6的类实际是function的语法糖
 
 #### 继承
 
@@ -2603,6 +2685,7 @@ Promise是一个构造函数，用来生成promise实例，有三种状态
 - pending：初始化状态
 - fullfilled：成功状态
 - rejected：失败状态
+- 状态变化不可逆
 
 #### 什么是异步
 
@@ -2618,7 +2701,7 @@ Promise是一个构造函数，用来生成promise实例，有三种状态
 
 同步或非同步，表明着是否需要将整个流程按顺序地完成
 
-阻塞或非阻塞，意味着你调用的函数会不会**立刻**告诉你结果
+阻塞或非阻塞，意味着你调用的函数会不会**立刻**告诉你结果，继不继续向后执行
 
 关于异步编程的方式，常用的**定时器、ajax、Promise、Generator、async/await(es7/8)**
 
@@ -2651,7 +2734,8 @@ Promise是一个构造函数，用来生成promise实例，有三种状态
 {
   let ajax = function() {
     console.log("执行2");
-    //返回一个promise实例，这个对象才有一个then方法
+    //返回一个promise实例，这个对象才有一个then方法  
+    //reject是ajax封装方法的第二个参数
     return new Promise(function(resolve, reject) {
      	setTimeout(() => {
      		//通过resolve传递参数	
@@ -2659,7 +2743,7 @@ Promise是一个构造函数，用来生成promise实例，有三种状态
 	    }, 1000);
     });
   };
-  //用
+  //用then
   ajax().then(function(data){
   	console.log("timeout2");
     //成功的状态输出	
@@ -2679,7 +2763,8 @@ Promise是一个构造函数，用来生成promise实例，有三种状态
 timeout1
 timeout2
 
-连续调用：
+- 连续调用
+
 
 ```
 {
@@ -2710,7 +2795,13 @@ timeout2
  //timeout3
 ```
 
+##### 小tips
+
+Promise的函数代码的异步任务会优先于setTimeout的延时为0的任务先执行
+
 #### 捕获异常错误catch
+
+语法错误Error和逻辑错误reject都可以通过catch来捕获，所以promise最好只传一个成功的回调就好了，失败的进入catch来捕获
 
 ```
 {
@@ -2736,7 +2827,40 @@ timeout2
 }
 ```
 
-#### 实例-封装原生ajax
+统一捕获异常，放最后
+
+```
+{
+	function loading(src){
+        return new Promise((resolve,reject)=>{
+        	//首先创建一个img标签
+        	let img = document.createElement("img");
+            //监听图片加载完成
+            img.onload = function(){
+            	resolve(img);
+            }
+            //onerror 事件在加载外部文件（文档或图像）发生错误时触发
+            img.onerror = function(err){
+            	reject(err)
+            }
+            img.src = src
+         })
+       }
+
+        var src = 'xxx.jpg';
+        var result = loading(src);
+        result.then((img) => {
+        	console.log(1,img.width);
+        	return img //如果return不是一个Promise实例对象那么返回的就是这个本身promise实例，.then()即是在本身实例上继续链式调用
+        }.then((img) => {
+        	console.log(2,img.height);
+        }).catch((error) => {
+        	console.log(3,error);
+        })
+}
+```
+
+#### 实例-封装原生ajax(promise串联)
 
 ```
 比如应用到先获取内容再获取内容下相关的评论
@@ -2785,13 +2909,13 @@ timeout2
 }
 ```
 
+#### promise高级用法
 
-
-#### 高级用法promise.all()和promise.race()
+以下的Promise为大写，表示window里的Promise变量
 
 ##### Promise.all
 
-Promise.all可以将多个Promise实例包装成一个新的Promise实例。同时，成功和失败的返回值是不同的，成功的时候返回的是一个结果数组，而失败的时候则返回最先被reject失败状态的值 
+Promise.all待全部完成后，统一执行success，成功的时候返回的是一个结果数组，而失败的时候则返回最先被reject失败状态的值 
 
 ###### **使用场景**
 
@@ -2814,13 +2938,6 @@ Promise.all可以将多个Promise实例包装成一个新的Promise实例。同�
 				reject(err)
 			}
 		})
-	}
-	//添加到页面
-	function showImgs(imgs){
-		//遍历图片
-		imgs.forEach(function(img) {
-	      document.body.appendChild(img);
-	    });
 	}
 	
 	// 把多个Promise实例当作一个实例
@@ -2847,7 +2964,7 @@ let p1 = wake(3000)
 let p2 = wake(2000)
 
 Promise.all([p1, p2]).then((result) => {
-  console.log(result)       // [ '3秒后醒来', '2秒后醒来' ]
+  console.log(result,result[0],result[1])       // [ '3秒后醒来', '2秒后醒来' ]
 }).catch((error) => {
   console.log(error)
 })
@@ -2888,14 +3005,12 @@ Promise.all([p1, p2]).then((result) => {
 	
 	// 把多个Promise实例当作一个实例
 	Promise.race([
-		loading('http://chuantu.xyz/t6/702/1570367039x992245926.jpg'),
+	    loading('http://chuantu.xyz/t6/702/1570367039x992245926.jpg'),
         loading('http://chuantu.xyz/t6/702/1570366675x992245926.jpg'),
         loading('http://chuantu.xyz/t6/702/1570367039x992245926.jpg')
 	]).then(showImgs)
 }
 ```
-
-
 
 
 
@@ -2932,12 +3047,12 @@ Iterator 的遍历过程是这样的。
     	let index = 0;//记录指针的位置
         let len = arr.length;//长度 用来判断done
 	    return {
-         next(){
-        	// 三目表达式 如果index < len说明没有遍历完
-        	return index < len ? {value: arr[index++], done: false} : 
-        	{value: undefined, done: true}
-     		  }
-	    }
+             next(){
+                // 三目表达式 如果index < len说明没有遍历完
+                return index < len ? {value: arr[index++], done: false} : 
+                {value: undefined, done: true}
+                  }
+            }
     }
     let arr = [1,4,65,'abc'];
     let iteratorObj = myIterator(arr);
@@ -3279,8 +3394,10 @@ SX.next();
 
 特点：
 
+-  有async才能使用await，使用async/await需要用babel-polyfill编译
+
 - 不需要像Generator去调用next，遇到await等待，当前异步操作完成就往下执行
-- 返回的是Promise，可以用then方法进行下一步操作
+- 返回的是Promise，但不像.then方法进行下一步操作
 - async取代Generator函数的*，await取代Generator的yield
 
 #### 基本使用
@@ -3324,6 +3441,50 @@ SX.next();
 		console.log(result3)//16asyncAndAwait.js:1 Uncaught (in promise) fail
 	}
 	asyncPrint();
+}
+```
+
+```
+{
+	 function loading(src){
+        return new Promise((resolve,reject)=>{
+        	//首先创建一个img标签
+        	let img = document.createElement("img");
+            //监听图片加载完成
+            img.onload = function(){
+            	resolve(img);
+            }
+            //onerror 事件在加载外部文件（文档或图像）发生错误时触发
+            img.onerror = function(err){
+            	reject(err)
+            }
+            img.src = src
+         })
+       }
+
+        var src1 = 'xxx.jpg';
+        var src2 = 'xxx.jpg';
+        
+        //new Promise写法那么需要用.then方法继续调后续操作
+        var result1 = loading(src1);
+        var result2 = loading(src2);
+        result1.then((img) => {
+        	console.log(1,img.width);
+        	return result2 
+        }.then((img) => {
+        	console.log(2,img.height);
+        }).catch((error) => {
+        	console.log(3,error);
+        })
+        
+        //async/await方式
+        const load = async function (){
+            const result1 = await loading(src1)
+            console.log(result1)
+            const result2 = await loading(src2)
+            console.log(result2)
+        }
+        load();
 }
 ```
 
@@ -3539,9 +3700,11 @@ core-decorators
 
 ### 十九.Module模块化
 
-引入import
+- 模块化编译es6语法，可用webpack和rollup
+- 引入import
 
-导出export
+- 导出export
+
 
 方法一:不推荐
 
@@ -3592,6 +3755,16 @@ export default {
 import module from './19module.js'
 console.log(module.A)
 ```
+
+#### export default 和 export 区别
+
+- 在一个文件或模块中，export、import可以有多个，export default仅有一个
+
+  (1) 输出单个值，使用export default
+  (2) 输出多个值，使用export 【注意：引入时要加花括号 import { A } from " B" 】解构引入
+  (3) export default与普通的export不要同时使用
+
+- 通过export方式导出，在导入时要加{ }，export default则不需要
 
 
 
@@ -4102,9 +4275,429 @@ export default Calculate
 
 #### base基本模块
 
+map数据类型添加数据  this.play_list.set(名称',{})　
+
+number set类型add添加，唯一不重复、字符串补白 this.number.add((''+i).padStart(2,'0'))
+
+set/map clear清除 self.omit.clear()
+
+es6遍历  let [index,item] of omit.entries()
+
+把集合转成真正的数组 let number=Array.from(this.number)
+
+```
+import $ from 'jquery';
+class Base{
+  /**
+   * [initPlayList 初始化奖金和玩法及说明]
+   * @return {[type]} [description]
+   */
+  initPlayList(){
+  	//初始化数据结构
+    this.play_list.set('r2',{
+      bonus:6,
+      tip:'从01～11中任选2个或多个号码，所选号码与开奖号码任意两个号码相同，即中奖<em class="red">6</em>元',
+      name:'任二'
+    })
+    .set('r3',{
+      bonus:19,
+      tip:'从01～11中任选3个或多个号码，选号与奖号任意三个号相同，即中奖<em class="red">19</em>元',
+      name:'任三'
+    })
+    .set('r4',{
+      bonus:78,
+      tip:'从01～11中任选4个或多个号码，所选号码与开奖号码任意四个号码相同，即中奖<em class="red">78</em>元',
+      name:'任四'
+    })
+    .set('r5',{
+      bonus:540,
+      tip:'从01～11中任选5个或多个号码，所选号码与开奖号码相同，即中奖<em class="red">540</em>元',
+      name:'任五'
+    })
+    .set('r6',{
+      bonus:90,
+      tip:'从01～11中任选6个或多个号码，所选号码与开奖号码五个号码相同，即中奖<em class="red">90</em>元',
+      name:'任六'
+    })
+    .set('r7',{
+      bonus:26,
+      tip:'从01～11中任选7个或多个号码，选号与奖号五个号相同，即中奖<em class="red">26</em>元',
+      name:'任七'
+    })
+    .set('r8',{
+      bonus:9,
+      tip:'从01～11中任选8个或多个号码，选号与奖号五个号相同，即中奖<em class="red">9</em>元',
+      name:'任八'
+    })
+  }
+  
+  /**
+   * [initNumber 初始化号码]
+   * @return {[type]} [description]
+   */
+  initNumber(){
+    for(let i=1;i<12;i++){
+      //number--set对象 不会重复 保持两位，没有两位就补充两位
+      this.number.add((''+i).padStart(2,'0'))
+    }
+  }
+  
+  /**
+   * [setOmit 设置遗漏数据]
+   * @param {[type]} omit [description]
+   */
+  setOmit(omit){
+  	//保存当前对象引用
+    let self=this;
+    //omit--map对象 先清空
+    self.omit.clear();
+    for(let [index,item] of omit.entries()){
+    //重新赋值  因为每10分钟赋值
+      self.omit.set(index,item)
+    }
+    $(self.omit_el).each(function(index,item){
+      $(item).text(self.omit.get(index))
+    });
+  }
+  /**
+   * [setOpenCode 设置开奖]
+   * @param {[type]} code [description]
+   */
+  setOpenCode(code){
+    let self=this;
+    self.open_code.clear();
+    for(let item of code.values()){
+    	//open_code set结构
+      self.open_code.add(item);
+    }
+    //更新获奖接口
+    self.updateOpenCode&&self.updateOpenCode.call(self,code);
+  }
+
+  /**
+   * [toggleCodeActive 号码选中取消]
+   * @param  {[type]} e [description]
+   * @return {[type]}   [description]
+   */
+  toggleCodeActive(e){
+    let self=this;
+    //获取选中对象
+    let $cur=$(e.currentTarget);
+    $cur.toggleClass('btn-boll-active');
+    self.getCount();
+  }
+  
+  /**
+   * [changePlayNav 切换玩法]
+   * @param  {[type]} e [description]
+   * @return {[type]}   [description]
+   */
+  changePlayNav(e){
+    let self=this;
+    let $cur=$(e.currentTarget);
+    $cur.addClass('active').siblings().removeClass('active');
+    self.cur_play=$cur.attr('desc').toLocaleLowerCase();
+    $('#zx_sm span').html(self.play_list.get(self.cur_play).tip);
+    $('.boll-list .btn-boll').removeClass('btn-boll-active');
+    self.getCount();
+  }
+  
+    /**
+   * [assistHandle 操作区] 大小奇偶 全选
+   * @param  {[type]} e [description]
+   * @return {[type]}   [description]
+   */
+  assistHandle(e){
+  	//阻止默认事件
+    e.preventDefault();
+    let self=this;
+    let $cur=$(e.currentTarget);
+    let index=$cur.index();
+    $('.boll-list .btn-boll').removeClass('btn-boll-active');
+    if(index===0){
+      $('.boll-list .btn-boll').addClass('btn-boll-active');
+    }
+    if(index===1){
+      $('.boll-list .btn-boll').each(function(i,t){
+      	//textContent 属性设置或返回指定节点的文本内容，以及它的所有后代
+        if(t.textContent-5>0){
+          $(t).addClass('btn-boll-active')
+        }
+      })
+    }
+    if(index===2){
+      $('.boll-list .btn-boll').each(function(i,t){
+        if(t.textContent-6<0){
+          $(t).addClass('btn-boll-active')
+        }
+      })
+    }
+    if(index===3){
+      $('.boll-list .btn-boll').each(function(i,t){
+        if(t.textContent%2==1){
+          $(t).addClass('btn-boll-active')
+        }
+      })
+    }
+    if(index===4){
+      $('.boll-list .btn-boll').each(function(i,t){
+        if(t.textContent%2==0){
+          $(t).addClass('btn-boll-active')
+        }
+      })
+    }
+    self.getCount();
+  }
+  
+  
+    /**
+   * [getName 获取当前彩票名称]
+   * @return {[type]} [description]
+   */
+  getName(){
+    return this.name
+  }
+  
+  /**
+   * [addCode 添加号码]
+   */
+  addCode(){
+    let self=this;
+    //当前号码文本的值
+    let $active=$('.boll-list .btn-boll-active').text().match(/\d{2}/g);
+    //如果值存在就取它的长度，否则就取0
+    let active=$active?$active.length:0;
+    let count=self.computeCount(active,self.cur_play);
+    if(count){
+      self.addCodeItem($active.join(' '),self.cur_play,self.play_list.get(self.cur_play).name,count);
+    }
+  }
+  
+  /**
+   * [addCodeItem 添加单次号码]
+   * @param {[type]} code     [description]
+   * @param {[type]} type     [description]
+   * @param {[type]} typeName [description]
+   * @param {[type]} count    [description]
+   */
+  addCodeItem(code,type,typeName,count){
+    let self=this;
+    const tpl=`
+    <li codes="${type}|${code}" bonus="${count*2}" count="${count}">
+		 <div class="code">
+			 <b>${typeName}${count>1?'复式':'单式'}</b>
+			 <b class="em">${code}</b>
+			 [${count}注,<em class="code-list-money">${count*2}</em>元]
+		 </div>
+	 </li>
+    `;
+    $(self.cart_el).append(tpl);
+    self.getTotal();
+  }
+
+  getCount(){
+    let self=this;
+    let active=$('.boll-list .btn-boll-active').length;
+    let count=self.computeCount(active,self.cur_play);
+    let range=self.computeBonus(active,self.cur_play);
+    let money=count*2;
+    let win1=range[0]-money;
+    let win2=range[1]-money;
+    let tpl;
+    //判断盈利
+    let c1=(win1<0&&win2<0)?Math.abs(win1):win1;
+    let c2=(win1<0&&win2<0)?Math.abs(win2):win2;
+    if(count===0){
+      tpl=`您选了 <b class="red">${count}</b> 注，共 <b class="red">${count*2}</b> 元`
+    }else if(range[0]===range[1]){
+      tpl=`您选了 <b>${count}</b> 注，共 <b>${count*2}</b> 元  <em>若中奖，奖金：
+			<strong class="red">${range[0]}</strong> 元，
+			您将${win1>=0?'盈利':'亏损'}
+			<strong class="${win1>=0?'red':'green'}">${Math.abs(win1)} </strong> 元</em>`
+    }else{
+      tpl=`您选了 <b>${count}</b> 注，共 <b>${count*2}</b> 元  <em>若中奖，奖金：
+			<strong class="red">${range[0]}</strong> 至 <strong class="red">${range[1]}</strong> 元，
+			您将${(win1<0&&win2<0)?'亏损':'盈利'}
+			<strong class="${win1>=0?'red':'green'}">${c1} </strong>
+			至 <strong class="${win2>=0?'red':'green'}"> ${c2} </strong>
+			元</em>`
+    }
+    $('.sel_info').html(tpl);
+
+  }
 
 
-lottery整合模块
+  /**
+   * [getTotal 计算所有金额]
+   * @return {[type]} [description]
+   */
+  getTotal(){
+    let count=0;
+    $('.codelist li').each(function(index,item){
+      count+=$(item).attr('count')*1;
+    })
+    $('#count').text(count);
+    $('#money').text(count*2);
+  }
+
+  /**
+   * [getRandom 生成随机数]
+   * @param  {[type]} num [description]
+   * @return {[type]}     [description]
+   */
+  getRandom(num){
+  	//保存临时变量
+    let arr=[],index;
+    //把类数组转换成真正数组
+    let number=Array.from(this.number);
+    while(num--){
+    	//指定1-11号码内
+      index=Number.parseInt(Math.random()*number.length);
+      arr.push(number[index]);
+      number.splice(index,1);
+    }
+    return arr.join(' ')
+  }
+
+  /**
+   * [getRandomCode 添加随机号码]
+   * @param  {[type]} e [description]
+   * @return {[type]}   [description]
+   */
+  getRandomCode(e){
+    e.preventDefault();
+    let num=e.currentTarget.getAttribute('count');
+    let play=this.cur_play.match(/\d+/g)[0];
+    let self=this;
+    if(num==='0'){
+      $(self.cart_el).html('')
+    }else{
+      for(let i=0;i<num;i++){
+        self.addCodeItem(self.getRandom(play),self.cur_play,self.play_list.get(self.cur_play).name,1);
+      }
+    }
+  }
+}
+
+export default Base
+```
+
+#### lottery整合模块
+
+```
+import 'babel-polyfill';
+import Base from './lottery/base.js';
+import Timer from './lottery/timer.js';
+import Calculate from './lottery/calculate.js';
+import Interface from './lottery/interface.js';
+import $ from 'jquery';
+
+//深度拷贝
+const copyProperties=function(target,source){
+	//Reflect.ownKeys拿源对象
+  for(let key of Reflect.ownKeys(source)){
+    if(key!=='constructor'&&key!=='prototype'&&key!=='name'){
+      let desc=Object.getOwnPropertyDescriptor(source,key);
+      //复制
+      Object.defineProperty(target,key,desc);
+    }
+  }
+}
+
+//多重继承
+const mix=function(...mixins){
+  class Mix{}
+  for(let mixin of mixins){
+    copyProperties(Mix,mixin);
+    copyProperties(Mix.prototype,mixin.prototype);
+  }
+  return Mix
+}
+
+//多重继承
+class Lottery extends mix(Base,Calculate,Interface,Timer){
+	//构造函数
+  constructor(name='syy',cname='11选5',issue='**',state='**'){
+    super();
+    this.name=name;
+    this.cname=cname;
+    this.issue=issue;
+    this.state=state;
+    this.el='';
+    this.omit=new Map();
+    this.open_code=new Set();
+    this.open_code_list=new Set();
+    this.play_list=new Map();
+    this.number=new Set();
+    this.issue_el='#curr_issue';
+    this.countdown_el='#countdown';
+    this.state_el='.state_el';
+    this.cart_el='.codelist';
+    this.omit_el='';
+    this.cur_play='r5';
+    this.initPlayList();
+    this.initNumber();
+    this.updateState();
+    this.initEvent();
+  }
+  
+
+  /**
+   * [updateState 状态更新]
+   * @return {[type]} [description]
+   */
+  updateState(){
+    let self=this;
+    //异步操作
+    this.getState().then(function(res){
+      self.issue=res.issue;
+      self.end_time=res.end_time;
+      self.state=res.state;
+      //更新当前期号
+      $(self.issue_el).text(res.issue);
+      self.countdown(res.end_time,function(time){
+      	//倒计时更新
+        $(self.countdown_el).html(time)
+      },function(){
+        setTimeout(function () {
+          self.updateState();
+          self.getOmit(self.issue).then(function(res){
+
+          });
+          self.getOpenCode(self.issue).then(function(res){
+
+          })
+        }, 500);
+      })
+    })
+  }
+  
+
+  /**
+   * [initEvent 初始化事件]
+   * @return {[type]} [description]
+   */
+  initEvent(){
+    let self=this;
+    $('#plays').on('click','li',self.changePlayNav.bind(self));
+    $('.boll-list').on('click','.btn-boll',self.toggleCodeActive.bind(self));
+    $('#confirm_sel_code').on('click',self.addCode.bind(self));
+    $('.dxjo').on('click','li',self.assistHandle.bind(self));
+    $('.qkmethod').on('click','.btn-middle',self.getRandomCode.bind(self));
+  }
+}
+
+export default Lottery;
+```
+
+index.js
+
+```
+import 'babel-polyfill';
+import Lottery from './lottery';
+
+const syy=new Lottery();
+```
 
 
 
