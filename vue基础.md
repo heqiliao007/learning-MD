@@ -265,6 +265,10 @@ renderError方法
 
 ![](.\vue-img\vue基础\5.JPG)
 
+keep-alive多出来的两个active及其销毁的生命周期
+
+思考：注意比较导卫首航和create的先后顺序
+
 ### 三.vue的数据绑定
 
 在data里的可以访问 全局的不能访问
@@ -357,6 +361,25 @@ key是动态的，一般不推荐index为key，可以用item，有可能会导�
 
  “(val,key,index)in obj”
 
+如果我们不想多创节点，又想实现for循环，我们就可以用template来做渲染，在chorme开发者工具上，也能证实，最外层的的template会自动消失，不会创造出多余的节点 
+
+```
+<template>
+     <div>
+         <template v-for="item in list">
+              <p>{{item.content}}</p>
+              <img :src="item.img" alt="">
+              <p class="divider"></p>
+         </template>
+     </div>
+</template>
+
+作者：混元霹雳手
+链接：https://juejin.im/post/58d5dc9b44d90400686aacb4
+来源：掘金
+著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
+```
+
 #### v-on
 
 @ 事件绑定
@@ -371,15 +394,33 @@ key是动态的，一般不推荐index为key，可以用item，有可能会导�
 
 ![](.\vue-img\vue基础\17.JPG)
 
-v-model.trim去掉数据首位空格
-
-v-model.lazy 转变为在 `change` 事件中同步 
+#### v-cloak 
 
 v-cloak在直接引用vue.js才用得到，在vue代码还未加载完成之前，隐藏掉
 
+#### v-once
+
 v-once 数据绑定的内容只执行一次，用于静态部分，不需要去对比虚拟dom，节省性能
 
-sync
+只进行第一次的数据渲染，如果再次改变值，文本值也不会改变 
+
+应用场景 ： 一般是用在组件树中传递时，导致组件数据一层一层传递时，变改了不需要改变的场景，用v-once可以避免在组件数中只需用一次性赋值操作 
+
+#### 修饰符
+
+sync<https://www.jianshu.com/p/d42c508ea9de> 
+
+<https://cn.vuejs.org/v2/guide/events.html#%E4%BA%8B%E4%BB%B6%E4%BF%AE%E9%A5%B0%E7%AC%A6> 
+
+v-model.trim去掉数据首位空格
+
+v-model.lazy 转变为在“change”时而非“input”时更新 
+
+##### .native将原生事件绑定到组件
+
+<https://cn.vuejs.org/v2/guide/components-custom-events.html#%E5%B0%86%E5%8E%9F%E7%94%9F%E4%BA%8B%E4%BB%B6%E7%BB%91%E5%AE%9A%E5%88%B0%E7%BB%84%E4%BB%B6> 
+
+在父组件去监听子组件的事件，或者去直接绑定@相应事件
 
 ### 六.vue组件的定义
 
