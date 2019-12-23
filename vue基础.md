@@ -408,10 +408,26 @@ v-once 数据绑定的内容只执行一次，用于静态部分，不需要去�
 
 #### 修饰符
 
-sync<https://www.jianshu.com/p/d42c508ea9de> 
+sync vue2.3+
+子组件去改变props的值并且触发 不需要父组件去监听了
+<https://www.jianshu.com/p/d42c508ea9de> 
 
 <https://cn.vuejs.org/v2/guide/events.html#%E4%BA%8B%E4%BB%B6%E4%BF%AE%E9%A5%B0%E7%AC%A6> 
+```
+<student-list-info
+  style="float: left"
+  @confirm="onConfirm"
+  :student="this.student"
+  :visible.sync="display"
+>
+</student-list-info>
 
+changeDisplay (value) {
+  // this.visible = value
+  // this.$emit('switch', value)
+  this.$emit('update:visible', value)
+}
+```
 v-model.trim去掉数据首位空格
 
 v-model.lazy 转变为在“change”时而非“input”时更新 

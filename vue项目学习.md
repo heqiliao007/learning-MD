@@ -545,7 +545,7 @@ git push origin master提交代码至线上
 	git checkout xxx 切换到某个分支  
 	
 	git diff //查看不同
-	 git add .
+	git add .
 	git commit -m "提交信息"//提交信息
 	git push origin xxx分支 //提交到远程xxx分支
 	
