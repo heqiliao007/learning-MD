@@ -62,29 +62,59 @@ ps：一个坑
 
 在安装vue-cli3.x版本时，node版本>8.9
 
+npm install -g --g @vue/cli@xx --registry=https://registry.npm.taobao.org
+
 一定要删除cli2.x版本并把npm缓存和module这些包都删了
 
 重新装一下yarn
 
 
-
 关于图片：public用require引入或者import是base64格式
+最好用import导入
 
 #### 目录结构 
+
+最外层新建.editorconfig 搭配VScode插件EditorConfig for VS Code配置编辑器习惯
+
+```
+#开启
+root = true
+#所有文件都有效
+[*]
+charset = utf-8
+#缩进
+indent_style = space/tabs
+#缩进尺寸
+indent_size = 2
+.....
+```
+
+src目录下
+
+项目配置新建config配置文件夹新建index.js
+在其他文件夹引入import config from './comfig'即可引入
+或者vue.config.js
 
 api 交互
 
 common 通用资源文件夹 font/img/stylus
+或者assets下新建font/img
 
-components 组件
+components 通用组件
 
 filters自定义过滤器
 
+directive自定义指令
+
+lib/util文件夹下分类放通用方法和与自己项目有关的业务方法
+
 mock 模拟数据
 
-pages 路由组件
+pages/views 页面
 
 store vuex相关
+
+router文件夹下放路由文件，抽离出index.js和router.js
 
 App.vue 应用组件
 
