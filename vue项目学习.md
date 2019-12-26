@@ -1,22 +1,60 @@
-vue学习
-
 ### 自学vue项目笔记
 
 #### 初始化项目
 
-vue-cli2.0初始化一个项目 vue init webpack  xxx
+**vue-cli2.0**
 
-vue-cli3.0 vue create xxx
+初始化一个项目 vue init webpack  xxx
+
+npm run dev == npm start运行
+
+**vue-cli3.0** 
+
+初始化一个项目vue create xxx
 
 也可以用vue ui
 
-google浏览器下载vue-detools
+```
+(1. babel
+(2. TypeScript  
+(3. Progressive Web App (PWA) Support  支持渐进式网页应用程序
+(4. Router 路由管理器
+(5. Vuex 状态管理模式（构建一个中大型单页应用时）
+(6. CSS Pre-processors css预处理
+(7. Linter / Formatter 代码风格、格式校验
+(8. Unit Testing 单元测试
+(9. E2E Testing E2E（End To End）即端对端测试
+一般选择如下1456
+并且使用配置文件，保存在各自的配置文件
+6选择less或者stylus
+7选择eslint+standard config
+Lint on save 保存时检查
+不保存预设
+```
+
+google浏览器下载vue-detools配合使用
+
+启动用yarn serve
+
+安装插件 yarn add xxx
+
+其他用法和npm差不多，具体看文档
+
+
+
+ps：一个坑
+
+在安装vue-cli3.x版本时，node版本>8.9
+
+一定要删除cli2.x版本并把npm缓存和module这些包都删了
+
+重新装一下yarn
+
+
 
 #### 打包发布 
 
 vue-cli2.0
-
-npm run dev == npm start运行
 
 npm run build打包  生成的文件在dist下
 
@@ -42,47 +80,61 @@ manifest.js是配置文件
 
 vendor.js是各个组件、页面公用的代码
 
+chunk-vendors.js放的是import或第三方库的一些js
+
 前面两个是在开发环境中并没有
 
-app.js放的是业务逻辑代码
+app.js放的是业务逻辑代码，自己依赖、开发的模块
+
+打包后是hash的方式，有本地缓存的作用
 
 
 
-vue-cli3.0
+**vue-cli3.0新增**
 
-启动用yarn serve
+package.json里有可视化打包report可以生成界面展示
 
-安装插件 yarn add xxx
+"report": "vue-cli-service build --report" 
 
-其他用法和npm差不多，具体看文档
-
-
-
-ps：一个坑
-
-在安装vue-cli3.x版本时，node版本>8.9
-
-一定要删除cli2.x版本并把npm缓存和module这些包都删了
-
-重新装一下yarn
+命令npm run report
 
 
 
-关于图片：public用require引入或者import是base64格式
+优化 上下文替换插件 ContextReplacementPlugin
+
+配置plugin<https://github.com/Yatoo2018/webpack-chain/tree/zh-cmn-Hans> 
+
+你可以使用 `vue-cli-service inspect` 来审查一个 Vue CLI 项目的 webpack config 
+
+命令 vue inspect >> xx.js
+
+启动一个node server去打开打包好的index.html
+
+python -m SimpleHTTPServer 8080
+
+
+
+关于图片：
+
+public用require引入或者import是base64格式
+
+一般项目里用import引入....后续再研究图片的打包路径问题...
 
 #### 目录结构 
 
 api 交互
 
-common 通用资源文件夹 font/img/stylus
+common/assets 静态资源文件夹 font/img/stylus
 
-components 组件
+components 通用组件
 
 filters自定义过滤器
 
+direction 自定义指令
+
 mock 模拟数据
 
-pages 路由组件
+pages /views页面组件
 
 store vuex相关
 
@@ -191,6 +243,10 @@ webpack.dev.conf.js
 
 改为config/index.js中进行数据配置 
 
+cli3.0
+
+vue.config.js里配置搭配webpack4
+
 
 
 ps：flex布局左右布局
@@ -229,7 +285,13 @@ align-items: stretch;
 
 在main.js new Vue中如果去配了它 有以下作用 
 
-多了几个标签keep-alive  router-link（跳转）  router-view（显示，这个可以为单标签）
+多了几个标签
+
+keep-alive 
+
+ router-link（跳转）  相当于a标签
+
+router-view（显示，这个可以为单标签）视图渲染
 
 多了两个属性可以访问 $router 和 $route
 
@@ -238,6 +300,8 @@ align-items: stretch;
   如果是query则不用带
 
 - 如果是路由视图，就有父子路由，页面的区分比如主页就这样靠路由区分
+
+##### 动态路由匹配
 
 
 
@@ -553,7 +617,10 @@ git push origin master提交代码至线上
 	git pull origin master//先拉取一遍别人可能更新了
 	
 	git merge origin/xxx分支 // 把xxx分支上新增的内容合并到master分支上
-	git push // 把master分支的内容提交到线上
+	git push // 把master分支的内容提交到线上git push origin master
+	
+	//git 如何在A分支merge B分支的单个文件
+	git checkout -p B file.txt
 	
 	git reset --soft HEAD^ //撤销本次提交，将本地仓库回滚到上一个版本，工作区和暂存区不变。
 	HEAD^表示上个提交版本，HEAD^^表示上上个提交版本，HEAD~n代表前面第n个版本
