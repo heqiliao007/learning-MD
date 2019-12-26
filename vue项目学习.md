@@ -102,7 +102,13 @@ package.json里有可视化打包report可以生成界面展示
 
 优化 上下文替换插件 ContextReplacementPlugin
 
+<<<<<<< HEAD
 配置plugin<https://github.com/Yatoo2018/webpack-chain/tree/zh-cmn-Hans> 
+=======
+npm install -g --g @vue/cli@xx --registry=https://registry.npm.taobao.org
+
+一定要删除cli2.x版本并把npm缓存和module这些包都删了
+>>>>>>> 448f1acb7e8e67357bc4b9f68513b78119a18441
 
 你可以使用 `vue-cli-service inspect` 来审查一个 Vue CLI 项目的 webpack config 
 
@@ -110,6 +116,7 @@ package.json里有可视化打包report可以生成界面展示
 
 启动一个node server去打开打包好的index.html
 
+<<<<<<< HEAD
 python -m SimpleHTTPServer 8080
 
 
@@ -119,24 +126,66 @@ python -m SimpleHTTPServer 8080
 public用require引入或者import是base64格式
 
 一般项目里用import引入....后续再研究图片的打包路径问题...
+=======
+关于图片：public用require引入或者import是base64格式
+最好用import导入
+>>>>>>> 448f1acb7e8e67357bc4b9f68513b78119a18441
 
 #### 目录结构 
 
+最外层新建.editorconfig 搭配VScode插件EditorConfig for VS Code配置编辑器习惯
+
+```
+#开启
+root = true
+#所有文件都有效
+[*]
+charset = utf-8
+#缩进
+indent_style = space/tabs
+#缩进尺寸
+indent_size = 2
+.....
+```
+
+src目录下
+
+项目配置新建config配置文件夹新建index.js
+在其他文件夹引入import config from './comfig'即可引入
+或者vue.config.js
+
 api 交互
 
+<<<<<<< HEAD
 common/assets 静态资源文件夹 font/img/stylus
+=======
+common 通用资源文件夹 font/img/stylus
+或者assets下新建font/img
+>>>>>>> 448f1acb7e8e67357bc4b9f68513b78119a18441
 
 components 通用组件
 
 filters自定义过滤器
 
+<<<<<<< HEAD
 direction 自定义指令
 
 mock 模拟数据
 
 pages /views页面组件
+=======
+directive自定义指令
+
+lib/util文件夹下分类放通用方法和与自己项目有关的业务方法
+
+mock 模拟数据
+
+pages/views 页面
+>>>>>>> 448f1acb7e8e67357bc4b9f68513b78119a18441
 
 store vuex相关
+
+router文件夹下放路由文件，抽离出index.js和router.js
 
 App.vue 应用组件
 
@@ -559,25 +608,6 @@ class对象表达式
 
 ![1565629517266](C:\Users\ADMINI~1\AppData\Local\Temp\1565629517266.png)
 
-
-
-
-
-补充：
-
-函数节流的核心是，**让一个函数不要执行得太频繁，减少一些过快的调用来节流。** 
-
-- DOM 元素的拖拽功能实现（mousemove）
-- 射击游戏的 mousedown/keydown 事件（单位时间只能发射一颗子弹）
-- 计算鼠标移动的距离（mousemove）
-- Canvas 模拟画板功能（mousemove）
-- 搜索联想（keyup）
-- 监听滚动事件判断是否到页面底部自动加载更多：给 scroll 加了 debounce 后，只有用户停止滚动后，才会判断是否到了页面底部；如果是 throttle 的话，只要页面滚动就会间隔一段时间判断一次 
-
-**函数去抖就是对于一定时间段的连续的函数调用，只让其执行一次。** 
-
-- 每次 resize/scroll 触发统计事件
-- 文本输入的验证（连续输入文字后发送 AJAX 请求进行验证，验证一次就好）
 
 
 
