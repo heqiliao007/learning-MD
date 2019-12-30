@@ -101,35 +101,23 @@ package.json里有可视化打包report可以生成界面展示
 
 
 优化 上下文替换插件 ContextReplacementPlugin
-
-<<<<<<< HEAD
 配置plugin<https://github.com/Yatoo2018/webpack-chain/tree/zh-cmn-Hans> 
-=======
+
 npm install -g --g @vue/cli@xx --registry=https://registry.npm.taobao.org
 
 一定要删除cli2.x版本并把npm缓存和module这些包都删了
->>>>>>> 448f1acb7e8e67357bc4b9f68513b78119a18441
 
 你可以使用 `vue-cli-service inspect` 来审查一个 Vue CLI 项目的 webpack config 
-
 命令 vue inspect >> xx.js
 
 启动一个node server去打开打包好的index.html
-
-<<<<<<< HEAD
 python -m SimpleHTTPServer 8080
 
 
-
 关于图片：
-
 public用require引入或者import是base64格式
-
 一般项目里用import引入....后续再研究图片的打包路径问题...
-=======
-关于图片：public用require引入或者import是base64格式
-最好用import导入
->>>>>>> 448f1acb7e8e67357bc4b9f68513b78119a18441
+
 
 #### 目录结构 
 
@@ -156,24 +144,18 @@ src目录下
 
 api 交互
 
-<<<<<<< HEAD
 common/assets 静态资源文件夹 font/img/stylus
-=======
-common 通用资源文件夹 font/img/stylus
-或者assets下新建font/img
->>>>>>> 448f1acb7e8e67357bc4b9f68513b78119a18441
 
 components 通用组件
 
 filters自定义过滤器
 
-<<<<<<< HEAD
 direction 自定义指令
 
 mock 模拟数据
 
 pages /views页面组件
-=======
+
 directive自定义指令
 
 lib/util文件夹下分类放通用方法和与自己项目有关的业务方法
@@ -181,7 +163,6 @@ lib/util文件夹下分类放通用方法和与自己项目有关的业务方法
 mock 模拟数据
 
 pages/views 页面
->>>>>>> 448f1acb7e8e67357bc4b9f68513b78119a18441
 
 store vuex相关
 
