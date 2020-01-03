@@ -121,6 +121,10 @@ public用require引入或者import是base64格式
 
 #### 目录结构 
 
+public下
+favicon.ico是网址上方的标题的小图标。
+index.html：是入口文件模板。
+
 最外层新建.editorconfig 搭配VScode插件EditorConfig for VS Code配置编辑器习惯
 
 ```
@@ -134,6 +138,28 @@ indent_style = space/tabs
 #缩进尺寸
 indent_size = 2
 .....
+```
+
+根文件目录下vue.config.js
+```
+const path = require('path')
+const resolve = dir => path.join(__dirname, dir)
+const BASE_URL = process.env.NODE_ENV === 'production' ? '/iview-admin/' : '/'
+module.exports = {
+  lintOnSave: true,
+  baseUrl: BASE_URL,
+  // vuecli3.0配置相对路径
+  chainWebpack: config => {
+    config.resolve.alias
+      .set('@', resolve('src'))
+      .set('_c', resolve('src/components')
+  },
+  //打包时不生成map文件 可以减少打包体积
+  production:false，
+  devServer: {
+    proxy: "http://localhost:888"
+  }
+}
 ```
 
 src目录下
@@ -153,10 +179,9 @@ filters自定义过滤器
 direction 自定义指令
 
 mock 模拟数据
+下载mockjs -save-dev
 
 pages /views页面组件
-
-directive自定义指令
 
 lib/util文件夹下分类放通用方法和与自己项目有关的业务方法
 
@@ -165,8 +190,37 @@ mock 模拟数据
 pages/views 页面
 
 store vuex相关
+文件夹下mutations、actions、state、index.js分类，再分模块modules
 
 router文件夹下放路由文件，抽离出index.js和router.js
+```
+index.js
+import Vue from 'vue'
+import Router from 'vue-router'
+import Routes from './router'
+
+Vue.use(Router)
+
+export default new Router({
+    routes
+})
+
+
+router.js
+import Home from './views/Home.vue'
+export default [
+  {
+     path: '/',
+     name: 'home',
+     component:Home
+  },
+  {
+     path: '/about',
+     name: 'aoout',
+     component: () => import('@/views/About.vue')
+  }
+]
+```
 
 App.vue 应用组件
 
