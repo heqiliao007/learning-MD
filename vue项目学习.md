@@ -346,21 +346,19 @@ align-items: stretch;
 
 
 
-
+经常用到的flex布局
 {
 
-​	display: flex;
+	display: flex;
 
-​	flex-direction: column;
+	flex-direction: column;
 
-​	align-items: center;
+	align-items: center;
 
-​	justify-content: center
+	justify-content: center
 
-​	 {
-
+	{
    		flex:1   //所有的子元素平均分配
-
  	}
 
 }
