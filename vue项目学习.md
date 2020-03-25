@@ -54,7 +54,7 @@ ps：一个坑
 
 #### 打包发布 
 
-vue-cli2.0
+**vue-cli2.0**
 
 npm run build打包  生成的文件在dist下
 
@@ -121,11 +121,13 @@ public用require引入或者import是base64格式
 
 #### 目录结构 
 
-public下
+**public下**
 favicon.ico是网址上方的标题的小图标。
 index.html：是入口文件模板。
 
-最外层新建.editorconfig 搭配VScode插件EditorConfig for VS Code配置编辑器习惯
+**editorconfig** 
+
+最外层新建.editorconfig 搭配VScode插件**EditorConfig for VS Code**配置编辑器习惯，有了这个插件配置才会起作用
 
 ```
 #开启
@@ -140,10 +142,15 @@ indent_size = 2
 .....
 ```
 
+**vue.config.js**
+
 根文件目录下vue.config.js
+
 ```
+//引入node path模块
 const path = require('path')
 const resolve = dir => path.join(__dirname, dir)
+//项目基本路径 如果是生产环境 具体路径  如果是开发环境 / 
 const BASE_URL = process.env.NODE_ENV === 'production' ? '/iview-admin/' : '/'
 module.exports = {
   lintOnSave: true,
@@ -151,24 +158,27 @@ module.exports = {
   // vuecli3.0配置相对路径
   chainWebpack: config => {
     config.resolve.alias
+      //表示当前路由拼接上了src
       .set('@', resolve('src'))
       .set('_c', resolve('src/components')
   },
   //打包时不生成map文件 可以减少打包体积
   production:false，
+  //跨域  写下需要代理的url
   devServer: {
     proxy: "http://localhost:888"
   }
 }
 ```
 
-src目录下
+**src目录下**
 
-项目配置新建config配置文件夹新建index.js
-在其他文件夹引入import config from './comfig'即可引入
-或者vue.config.js
+新建config配置文件夹，这里面可以放各种配置文件
 
-api 交互
+例如新建index.js
+在其他文件夹引入import config from './config'即可引入
+
+**api 交互**
 
 common/assets 静态资源文件夹 font/img/stylus
 
@@ -179,54 +189,38 @@ filters自定义过滤器
 direction 自定义指令
 
 mock 模拟数据
-下载mockjs -save-dev
+下载mockjs --save-dev
 
 pages /views页面组件
 
-lib/util文件夹下分类放通用方法和与自己项目有关的业务方法
+lib/util.js文件夹下分类放与自己项目有关的业务方法
+
+lib/tools.js放通用方法或者说工具方法
 
 mock 模拟数据
 
 pages/views 页面
 
-store vuex相关
-文件夹下mutations、actions、state、index.js分类，再分模块modules
+store文件夹 vuex相关
+文件夹下mutations.js、actions.js、state.js、index.js分类
+再分模块modules，比如用户模块，新建user.js 定义state、getters、mutations、actions
 
 router文件夹下放路由文件，抽离出index.js和router.js
-```
-index.js
-import Vue from 'vue'
-import Router from 'vue-router'
-import Routes from './router'
-
-Vue.use(Router)
-
-export default new Router({
-    routes
-})
-
-
-router.js
-import Home from './views/Home.vue'
-export default [
-  {
-     path: '/',
-     name: 'home',
-     component:Home
-  },
-  {
-     path: '/about',
-     name: 'aoout',
-     component: () => import('@/views/About.vue')
-  }
-]
-```
+router.js放路由列表，index.js下去做一些路由拦截并引入路由列表
 
 App.vue 应用组件
 
 main.js入口
 
+eslint规则
+https://blog.csdn.net/weixin_41767649/article/details/90115453
+规则可以写在package.json里或者单独写.eslintrc.js
+例如"rules": {"space-before-function-paren": ["error", "never"]}
 
+修复eslint报错
+package.json修改为：（中间插入–fix）
+lint": "eslint --fix --ext .js,.vue src test/unit"，
+2、终端运行npm run lint修改代码样式
 
 #### 项目准备
 
@@ -573,73 +567,7 @@ dispatch=》commit
 
 
 
-#### 轮播swiper部分异步显示数据
-
-#### bug解决 $nextTick
-
-轮播swiper要在创建显示之后
-
-监视categorys  并且要在异步更新界面之后执行
-
-![1565530109049](C:\Users\ADMINI~1\AppData\Local\Temp\1565530109049.png)
-
-
-
-#### 列表等待效果（类似骨架屏）
-
-![1565531435428](C:\Users\ADMINI~1\AppData\Local\Temp\1565531435428.png)
-
-![1565531594592](C:\Users\ADMINI~1\AppData\Local\Temp\1565531594592.png)
-
-
-
-
-
-#### 登录模块--切换登录方式
-
-两种情况 布尔值
-
-class对象表达式
-
-样式切换
-
-![1565542477690](C:\Users\ADMINI~1\AppData\Local\Temp\1565542477690.png)
-
-![1565542404567](C:\Users\ADMINI~1\AppData\Local\Temp\1565542404567.png)
-
-内容切换
-
-![1565542627102](C:\Users\ADMINI~1\AppData\Local\Temp\1565542627102.png)
-
-
-
-合法手机号
-
-![1565543328207](C:\Users\ADMINI~1\AppData\Local\Temp\1565543328207.png)
-
-![1565543359425](C:\Users\ADMINI~1\AppData\Local\Temp\1565543359425.png)
-
-#### 倒计时效果
-
-阻止默认行为
-
-![1565627549840](C:\Users\ADMINI~1\AppData\Local\Temp\1565627549840.png)
-
-![1565628094700](C:\Users\ADMINI~1\AppData\Local\Temp\1565628094700.png)
-
-有时间的情况下才能点击
-
-![1565628168336](C:\Users\ADMINI~1\AppData\Local\Temp\1565628168336.png)
-
-#### 密码显示隐藏
-
-![1565629623069](C:\Users\ADMINI~1\AppData\Local\Temp\1565629623069.png)
-
-![1565629350765](C:\Users\ADMINI~1\AppData\Local\Temp\1565629350765.png)
-
-小球移动 向右 正
-
-![1565629517266](C:\Users\ADMINI~1\AppData\Local\Temp\1565629517266.png)
+#### 
 
 
 

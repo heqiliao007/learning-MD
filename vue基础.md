@@ -536,13 +536,9 @@ v-model功能
 
 ![](.\vue-img\vue基础\35.JPG)
 
-![](C:\Users\Administrator\Pictures\vue\vue基础\36.JPG)
-
 第一个refs是一个实例，第二个是一个节点
 
 也可以直接在ref上打印变量或方法，但不推荐直接以ref的改变实例的方式去使用变量或方法，因为你可以用props去操控组件
-
-![](C:\Users\Administrator\Pictures\vue\vue基础\37.JPG)
 
 实际开发中，作用域插槽一般应用于某些ui框架组件的自定义部分
 
@@ -628,15 +624,44 @@ domProps
 
 vue-router自动在url后加#，默认hash模式
 
-#### 1.默认路由跳转redirect
+#### 1.重定向redirect
 
-![](.\vue-img\vue基础\53.JPG)
+```
+  {
+    path: '/main',
+    name: 'main',
+    meta: {
+      title: 'main'
+    },
+    redirect: to => '/'
+    /*或者redirect: to => {
+    	return ‘/’
+    }*/
+    //to是代表当前要访问的页面的路由对象
+  },
+```
 
 #### 2.history
 
+无刷新页面
+
 加了这个后 路径不会带#，这个模式需要后端配合匹配所有的路由 
 
-![](.\vue-img\vue基础\54.JPG)
+```
+export default new Router({
+  routes,
+  mode: 'history'
+})
+```
+
+匹配不到路由资源会有问题，所以应该匹配到404 ，一定要定义到最后
+
+```
+ {
+    path: '*',
+    component: () => import('@/views/error_404.vue')
+ }
+```
 
 #### 3.base
 
@@ -700,15 +725,30 @@ savedPosition：记录滚动条滚动的位置
 
 用于history模式，有些浏览器不支持情况下，vue 会自动 fallback 到 hash 模式 
 
-#### 8.meta
+#### 8.meta路由元信息
 
 和 HTML 中 header 部分的 meta 页面原信息类似，例如 description 有助于 seo 等，一般和路由没什么关系的配置可以写在这
 
 meta: { title: 'this is app', description: 'xxx' } 
 
-#### 9.子路由 children
+#### 9.子路由 children/嵌套路由
 
  子路由使用，需要再上一级路由页面加上 router-view 显示，也就是嵌套路由的概念
+
+children写path的时候不需要加/，vue路径会自动加上  完整的路径应该是父path+子path
+
+```
+ children: [
+      {
+        path: 'table',
+        name: 'table_page',
+        meta: {
+          title: '表格'
+        },
+        component: () => import('@/views/table.vue')
+      },
+ ]
+```
 
 #### 10.transition
 
@@ -729,7 +769,7 @@ css部分：
   opacity : 0
 ```
 
-#### 11.传递参数（编程时导航）
+#### 11.传递参数（编程式导航）
 
 path不能和param一起，否则param将不生效
 
@@ -744,9 +784,28 @@ router.push({ path: 'register', query: { plan: 'private' }})
 router.push({ path: `/user/${userId}` }) // -> /user/123
 ```
 
-#### 12.接收参数
+#### 12.动态路由匹配
 
-$this.route  
+```
+{
+    path: 'params/:id',
+    name: 'params',
+    meta: {
+    	title: '参数'
+    },
+    component: () => import('@/views/argu.vue')
+}
+```
+
+push和relpace区别
+
+ router.push 会向 history 栈添加一个新的记录，当用户点击浏览器后退按钮时，则回到之前的 URL
+
+ router.replace 导航后不会留下 history 记录。即使点击返回按钮也不会回到这个页面 
+
+#### 13.接收参数
+
+$this.route  代表路由对象
 
 $this.route .param
 
@@ -758,102 +817,224 @@ $this.route .query
 
 一个 key/value 对象，表示 URL 查询参数。例如，对于路径 `/foo?user=1`，则有 `$route.query.user == 1`，如果没有查询参数，则是个空对象 
 
-#### 13.props
+#### 14.路由组件传参---props解耦
 
-![](.\vue-img\vue基础\62.JPG)
+- 布尔类型---动态路由匹配
 
-props为true时，把id作为props传入todo组件，更解耦并且更灵活
+  props为true时，把id作为props传入todo组件，更解耦并且更灵活
 
-![](.\vue-img\vue基础\63.JPG)
+```
+{
+        path: 'params/:id',
+        name: 'params',
+        meta: {
+          title: '参数'
+        },
+        component: () => import('@/views/argu.vue'),
+        props: true
+}
+```
 
-#### 14.vouter-view
+- 对象模式
+
+```
+{
+    path: '/about',
+    name: 'about',
+    component: () => import(/* webpackChunkName: "about" */ '@/views/About.vue'),
+    props: {
+      food: 'banana'
+    }
+ },
+```
+
+- 函数模式
+
+```
+{
+    path: '/about',
+    name: 'about',
+    component: () => import(/* webpackChunkName: "about" */ '@/views/About.vue'),
+    props: route => {
+    	food: route.query.food
+    }
+ },
+ 
+ 组件中
+ props:{
+ 	food:{
+ 		type:String,
+ 		default:'apple'
+ 	}
+ }
+```
+
+#### 15.router-view 命名视图
+
+视图渲染组件
 
 当有多个router-view时，用components，可以适用于上中下，左右布局
 
-![](.\vue-img\vue基础\64.JPG)
-
-#### 15.导航守卫
-
-1.在router的index.js中 全局路由有以下几个导航钩子
-
-router.beforeEach((to,from,next))=>{})中执行next()，路由才会跳转
-
-before可以做校验，可以用于用户登录验证
-
-![](.\vue-img\vue基础\65.JPG)
-
-router.beforeResolve(to,from,next))=>{})
-
-跳转完成后的执行函数，没有next了
-
-router.afterEach(to,from))=>{})
-
-2.在路由配置中，路由钩子beforeEnter 进入某个路由之前才会被调用，它的执行顺序在beforeEach和beforeResolve之间
-
-![](.\vue-img\vue基础\66.JPG)
-
-3.组件路由中
-
-只有beforeRouteEnter钩子没有this
+显示多个试图
 
 ```
-router.beforeRouteEnter((to,from,next))=>{
-
-next()
-
-})
-
-router.beforeRouteUpdate((to,from,next))=>{
-
-next()
-
-})
-
-router.beforeRouteLeave((to,from,next))=>{
-
-next()
-
-})
-
+{
+    path: '/named_view',
+    name: 'named_view',
+    meta: {
+      title: 'named_view'
+    },
+    components: {
+      default: () => import('@/views/child.vue'),
+      email: () => import('@/views/email.vue'),
+      tel: () => import('@/views/tel.vue')
+    }
+  }
 ```
 
-![](.\vue-img\vue基础\68.JPG)
+#### 16.导航守卫
 
-执行顺序
+##### 全局守卫
 
-跳到默认页
+  在router的index.js中 全局路由有以下几个导航钩子
 
-beforeRouteLeave=》beforeEach=》beforeResolve=》afterEach
+- router.beforeEach
 
-跳到另一个页面
+  router.beforeEach((to,from,next))=>{})中执行next()，路由才会跳转
 
-beforeEach=》beforeEnter=》beforeRouteEnter=》beforeResolve=》afterEach
+  to、from都是路由对象
 
-![](.\vue-img\vue基础\67.JPG)
+  beforeEach可以做校验，可以用于用户登录验证
 
-全局》路由配置》组件
+  ```
+  const HAS_LOGINED = false
+  
+  router.beforeEach((to, from, next) => {
+    to.meta && setTitle(to.meta.title)
+       if (to.name !== 'login') {
+         if (HAS_LOGINED) next() //如果已经登录 默认跳到登陆页
+         else next({ name: 'login' })
+       } else {
+         if (HAS_LOGINED) next({ name: 'home' })
+         else next()
+      }
+  }
+  ```
 
-router.beforeRouteUpdate：同样的组件在不同的复用下（同样的路由形式切换），比如每次id有变化时去进行数据更新，不用watch，减小开销或者获取出错撤销
+- router.beforeResolve
 
-next操作
+  在导航被确认之前（所有钩子都结束）触发
 
-![](.\vue-img\vue基础\69.JPG)
 
-用beforeRouteLeave去控制离开
+​       router.beforeResolve(to,from,next))=>{})
 
-![](.\vue-img\vue基础\70.JPG)
+- router.afterEach 后置钩子，不能对跳转页面进行操作
 
-#### 16.异步组件
+  跳转完成后的执行函数，没有next了：router.afterEach(to,from))=>{})
+  
+  ```
+  一般可用于处理loading
+  router.afterEach((to, from, next) => {
+    loading = false
+  }
+  ```
+
+##### 路由独享守卫
+
+​	在路由配置中，路由钩子beforeEnter 进入某个路由之前才会被调用，它的执行顺序在beforeEach和	beforeResolve之间
+
+```
+{
+    path: '/login',
+    name: 'login',
+    meta: {
+      title: '登录'
+    },
+    component: () => import('@/views/login.vue'),
+    beforeEnter: (to, from, next) => {
+    	if (form.name === 'login') console.log('这不是登陆页来的')
+    	next()
+    }
+}
+```
+
+##### 组件内的守卫
+
+- 只有beforeRouteEnter钩子没有this，还没有渲染，可以用vm参数，vm为组件实例
+- router.beforeRouteUpdate：同样的组件在不同的复用下（同样的路由形式切换），比如每次id有变化时去进行数据更新，不用watch，减小开销或者获取出错撤销
+
+```
+{
+    //xx组件,data\props.....
+    beforeRouteEnter(to, from, next) {
+    	next(vm => {
+    	
+    	})
+    },
+    beforeRouteLeave (to, from, next) {
+        // const leave = confirm('您确定要离开吗？')
+        // if (leave) next()
+        // else next(false)
+        next()
+    },
+    //路由发生变化，组件被复用时调用（同一url传参改变时适用）
+    beforeRouteUpdate (to, from, next) {
+        console.log(to.name, from.name)
+        next()
+    }
+}
+```
+
+##### 完整的导航解析流程
+
+ * 1. 导航被触发
+ * 2. 在失活的组件（即将离开的页面组件）里调用离开守卫 beforeRouteLeave
+ * 3. 调用全局的前置守卫 beforeEach
+ * 4. 在重用的组件里调用 beforeRouteUpdate
+ * 5. 调用路由独享的守卫 beforeEnter
+ * 6. 解析异步路由组件
+ * 7. 在被激活的组件（即将进入的页面组件）里调用 beforeRouteEnter
+ * 8. 调用全局的解析守卫 beforeResolve
+ * 9. 导航被确认
+ * 10. 调用全局的后置守卫 afterEach（所有导航钩子完成）
+ * 11. 触发DOM更新
+ * 12. 用创建好的实例调用beforeRouterEnter守卫里传给next的**回调函数**
+
+#### 17.异步组件/路由懒加载
+
+只有访问到这个页面时，才会加载到这个路由
 
 首屏加载的时候，速度更快，component接收的是一个函数
 
-![](.\vue-img\vue基础\72.JPG)
+```
+/*代表注释*/
+
+component: () => import(/* webpackChunkName: "about" */ '@/views/About.vue')
+```
 
 插件babel-plugin-syntax-dyntax-dynamic-import去识别这种引用语法
 
 ![](.\vue-img\vue基础\73.JPG)
 
+#### 18.router-link
 
+tag代表真实标签
+
+```
+<router-link tag="li" to="/about">
+  <a>About</a>
+</router-link>
+```
+
+#### 19.别名 *alias* 
+
+```
+{
+  path: '/admin',
+  component: AdminPanel,
+  alias: '/manage'
+}
+```
 
 ### 十二.vuex
 
