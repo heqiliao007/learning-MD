@@ -230,22 +230,40 @@ module.exports = {
 
 es5两个作用域：全局和函数
 
+-  在函数内部声明的变量，都会被提升到该函数开头，而在全局声明的变量，就会提升到全局作用域的顶部 
+-  即使if语句的条件是false（程序未进入if判断，但在if判断里声明了变量），也一样不影响a变量提升 
+-  在函数嵌套函数的场景下，变量只会提升到最近的一个函数顶部，而不会提升到外部函数 
+-  **没有声明和声明后没有赋值是不一样的** ，未声明报错“xx is not defined”，未赋值打印undefined
+
 es6增加：块作用域（大括号包围）
+
+临时死区的意思是在当前作用域的块内，在声明变量前的区域叫做临时死区 
 
 ```
 function test(){
 	var a = 1;
 	for(let i=1;i<3;i++){
-		console.log(i)
+		console.log(i) 
 	}
-	console.log(i)
+	console.log(i)//i is not defined i无法污染外部函数，如果是var 跳出循环体还可以打印3
 }
 test();
 //第一个i输出1 2  第二个i报错
 
 {
-	console.log(name)//直接报错未定义
+	console.log(name)//直接报错未定义 TDZ，俗称临时死区，用来描述变量不提升的现象
     let name = 'bbb';
+}
+
+{
+ 	function test() {
+        if(true) {
+          let a = 1
+        }
+        console.log(a)
+    }    
+    test() // a is not defined
+    //程序先访问a 再声明 报错
 }
 ```
 
@@ -280,15 +298,13 @@ test();
 
 1.let声明的变量只在块作用域有效
 
-2.es6强制使用严格模式，因此第二个i不是undefined而是报错（变量未引用报错而不是undefined）
+2.es6强制使用严格模式，因此第二个i不是undefined而是报错not defined（变量未引用报错而不是undefined），l临时死区
 
 3.使用let不可重复定义变量，若重复浏览器会报错XXModule build failed
 
 4.不会预处理，不存在变量提升
 
 5.循环遍历加监听，使用let取代var是趋势
-
-
 
 ```
 function test1(){
@@ -306,7 +322,16 @@ test1();
 
 #### const总结
 
-1.常量const不能修改/不能重复赋值（不严谨），read-only
+```
+if(true) {
+    const a = function(){
+
+    }
+} 
+//请注意 以上是块级函数，也会被命名提升，除非在严格模式下
+```
+
+1.常量const不能修改/不能重复赋值（不严谨），报错 xx is read-only
 
 但是对象可以修改（因为对象是引用类型，返回的是存储内存的指针（地址），因此，是指针不可以改变const，但是指向这个指针的对象是可以变化的）
 
@@ -375,7 +400,7 @@ test1();
 
 #### 4.使用场景
 
-(1).变量交互
+**(1).变量交互**
 
 ```
 {
@@ -449,7 +474,7 @@ test1();
 }
 ```
 
-(5)嵌套对象取value值
+**(5)嵌套对象取value值**
 
 ```
 {
@@ -677,6 +702,8 @@ re.flags // 's'
 
 判断字符串中是否包含某些字符
 
+**如果你只是需要匹配字符串中是否包含某子字符串，那么推荐使用xx.includes()，如果需要找到匹配字符串的位置，使用indexOf()** 
+
 ##### startsWith/endsWith
 
 判断字符串是否以某些字符串为起始或者截至
@@ -712,6 +739,16 @@ re.flags // 's'
   let info = "hello world";
   let m = `i am ${name},${info}`;
   console.log(m); //i am list,hello world
+}
+
+{
+	//换行
+	let a = `123
+    456
+    `
+    console.log(a)
+    // 123
+    // 456
 }
 ```
 
@@ -963,6 +1000,17 @@ function ArrayOf(){
   	let arr = Array.of();
   	console.log("arr=", arr);//[]返回空数组
 }
+
+{
+	//当new一个字符串的时候，生成的是该字符串为元素的数组
+	const a = new Array(2) //长度、undefined
+    const b = new Array("2") //值 但是是字符串
+    console.log(a, b) //[undefined, undefined] ["2"]
+    
+    const c = Array.of(2) //值为数字，不会有歧义
+    const d = Array.of("2")
+    console.log(c, d) // [2] ["2"] 
+}
 ```
 
 ##### Array.from
@@ -1182,7 +1230,7 @@ let arr2 = [3, 4, 5];
 arr1.push(...arr2);
 ```
 
-#### 补充es5知识点
+#### 补充es5高阶函数
 
 ##### sort
 
@@ -1191,7 +1239,7 @@ s.sort(function(a,b){return a-b;});
 作用就是比较两个数的大小用的,然后返回结果的正负作为排序的依据.
  这个函数是升序排序,如果想逆序排序改成return b-a;就行了
 
-##### filter
+##### filter/map
 
 ```
 var spread = [12, 5, 8, 8, 130, 44,130]
@@ -1207,6 +1255,48 @@ console.log('数组去重结果', filtered)
 filter方法是对原数组进行过滤筛选，产生一个新的数组对象
 
 map方法对元素中的元素进行加工处理，产生一个新的数组对象。
+
+ps：map遇见空数组位，会跳过空位，但会保留这个值
+
+```
+{
+	function pow(x) {
+        return x * x;
+    }
+    var arr = [1, 2, 3, 4, 5, 6, 7, 8, 9];
+    var results = arr.map(pow); // [1, 4, 9, 16, 25, 36, 49, 64, 81]
+    console.log(results);
+}
+{
+	//数字转为字符串：
+	var arr = [1, 2, 3, 4, 5, 6, 7, 8, 9];
+	arr.map(String); // ['1', '2', '3', '4', '5', '6', '7', '8', '9']
+}
+```
+
+##### reduce
+
+累计函数， callback  接受四个参数：初始值（上一次回调的返回值），当前元素值，当前索引，原数组 
+
+ initialValue（可选的初始值。作为第一次调用回调函数时传给previousValue的值） 
+
+ nitialValue 会多递归一次，而initialValue的值的作用大家应该也明了了：为累加等操作传入起始值（额外的加值） 
+
+```
+//数组 arr = [1,2,3,4] 求数组的和
+//forEach 实现
+var arr = [1,2,3,4],
+sum = 0;
+arr.forEach(function(e){sum += e;}); // sum = 10  just for demo
+//map 实现
+var arr = [1,2,3,4],
+sum = 0;
+arr.map(function(obj){sum += obj});//return undefined array. sum = 10  just for demo
+//reduce实现
+//不用定义sum值，直接累加初始值和当前元素值
+var arr = [1,2,3,4];
+arr.reduce(function(pre,cur){return pre + cur}); // return 10
+```
 
 #### 空位的处理
 
@@ -1237,8 +1327,9 @@ ES6 则是明确将空位转为`undefined`
 #### 参数默认值
 
 - 参数变量`x`是默认声明的，在函数体中，不能用`let`或`const`再次声明，否则会报错 
-
 - 先取作用域内的默认值，如果作用域内没有再向外取值
+-  **在ES6环境下，默认值对arguments的影响和ES5严格模式是同样的标准** 
+-  参数不仅可以设置默认值为字符串，数字，数组或者对象，还可以是一个函数 
 
 ```
 {
@@ -1256,6 +1347,25 @@ ES6 则是明确将空位转为`undefined`
   test2("kaka"); // kaka test
   //不赋值的话是undefined
 }
+{
+	//在ES5的严格模式下，arguments就不能在函数内修改默认值后跟随着跟新了
+	//如非严格模式下，则arguments的值会跟随默认值的改变而改变
+    "use strict"; //严格模式   
+    function a(num) {
+      console.log(num === arguments[0]); // true
+      num = 2;
+      console.log(num === arguments[0]); // false
+    }
+    a(1);
+}
+{
+	//默认参数的临时死区
+    //这是个默认参数临时死区的例子，当初始化a时，b还没有声明，所以第一个参数对b来说就是临时死区。
+    function add(a = b, b){
+      console.log(a + b)
+    }
+    add(undefined, 2) // b is not define
+}
 ```
 
 #### rest参数(...变量名 )
@@ -1266,12 +1376,12 @@ ES6 则是明确将空位转为`undefined`
 
 返回函数本身
 
-注意，rest 参数指的是最后一个参数，所以之后不能再有其他参数（即只能是最后一个参数），否则会报错！！！ 
+注意，**rest 参数指的是最后一个参数**，所以之后不能再有其他参数（即只能是最后一个参数），否则会报错！！！ 并且 不能用于对象字面量setter方法中 
 
 ```
 { 
-	function test3(...arg) {
-		console.log(arguments)//伪数组，不是真正的数组，没有数组的方法
+	function test3(...arg) { //使用...（展开运算符）的参数就是不定参数
+		console.log(arguments)//伪数组，不是真正的数组，没有数组的方法，但是有length属性
 		console.log(arg)//是真正的数组,可以用let...of方法去遍历
 	    for (let v of arg) {
 	      console.log("rest", v);
@@ -1289,7 +1399,7 @@ ES6 则是明确将空位转为`undefined`
 }
 ```
 
-#### 扩展运算符
+#### 扩展运算符/展开运算符
 
 rest参数和扩展操作符拥有相同的语法，不同的是，rest参数是把所有的参数收集起来转换成数组，而扩展操作符是把数组扩展成单独的参数 (离散)，可以理解为互为逆运用
 
@@ -1299,6 +1409,11 @@ rest参数和扩展操作符拥有相同的语法，不同的是，rest参数是
 {
      // 把数组转成离散的值
   	console.log("a", ...[1, 2, 4]); //a 1 2 4
+  	
+    //ES6的写法
+    let arr = [10, 20, 50, 40, 30]
+    let a = Math.max(...arr)
+    console.log(a) // 50
 }
 ```
 
@@ -1335,7 +1450,7 @@ es6: 定义时候的对象（不可变的）
 
 （1）函数体内的`this`对象，就是定义时所在的对象，而不是调用时所在的对象。
 
-所谓定义时所在的对象，要看箭头函数外层是否有函数
+   所谓定义时所在的对象，要看箭头函数外层是否有函数
 
 - 如果有，外层函数的this就是内部箭头函数的this
 
@@ -1381,6 +1496,10 @@ es6: 定义时候的对象（不可变的）
 
 （5）不可以使用`super`、`new.target` 
 
+（6）没有原型
+
+（7）不支持重复的命名参数。
+
 **箭头函数可以与变量解构结合使用** 
 
 ```
@@ -1405,6 +1524,21 @@ es6: 定义时候的对象（不可变的）
 }
 ```
 
+#####  箭头函数写立即执行函数表达式 
+
+```
+{
+    const test = ((id) => {
+      return {
+        getId() {
+          console.log(id)
+        }
+      }
+    })(18)
+    test.getId() // 18
+}
+```
+
 #### 尾调用
 
 函数的最后一句话是否是调用函数
@@ -1412,6 +1546,12 @@ es6: 定义时候的对象（不可变的）
 用于性能提升、优化
 
 ```
+"use strict";   
+function a() {
+	return b();
+}
+
+
 function f(x){
   g(x);
 }
@@ -1420,7 +1560,22 @@ function f(x){
 
 如果尾调用自身，就称为尾递归 
 
-太高深了，以后研究.......
+```
+//新型尾优化写法
+"use strict";  
+function a(n, p = 1) {
+    if(n <= 1) {
+    	return 1 * p
+    }
+    let s = n * p
+    	return a(n - 1, s)
+    }
+//求 1 x 2 x 3的阶乘
+let sum = a(3)
+console.log(sum) // 6
+```
+
+
 
 ### 九.对象扩展
 
@@ -1468,6 +1623,7 @@ ES6 又新增了另一个类似的关键字`super`，指向当前对象的原型
 
 ```
 {
+	//嵌套的
     let obj = { a: { b: 1 } };
     let { ...x } = obj;
     obj.a.b = 2;
@@ -1504,12 +1660,33 @@ ES6 又新增了另一个类似的关键字`super`，指向当前对象的原型
 	let { x, ...newObj } = o;
 	//let { x, ...{ y, z } } = o;不能写成这种形式
 	//因为如果使用解构赋值，扩展运算符后面必须是一个变量名，而不能是一个解构赋值表达式
-	console.log(x,newObj)//1 {z: 3}
+	console.log(x,newObj)//1 {z: 3}  y没有解构出来
 	
 	let { y, z } = newObj;
      x // 1
      y // undefined
      z // 3
+}
+```
+
+ **嵌套对象解构** 
+
+```
+{
+   let obj = {
+      a: {
+        b: {
+          c: 5
+        }
+      }
+    }
+    const {a: {b}} = obj
+    console.log(b.c) // 5
+}
+
+{
+    const { data: { code, data } } = await api.post('shop/getShopBaseInfo', config)
+    //把data下的code和data单独解构出来
 }
 ```
 
@@ -1558,12 +1735,17 @@ ES6 又新增了另一个类似的关键字`super`，指向当前对象的原型
 
 ```
 
-ps：对象的扩展运算符等同于使用`Object.assign()`方法 （浅拷贝）
+**ps：对象的扩展运算符等同于使用`Object.assign()`方法 （浅拷贝）**
 
 ```
 let aClone = { ...a };
 // 等同于
 let aClone = Object.assign({}, a);
+
+let aClone = { ...a, ...b};
+// 等同于
+let aClone = Object.assign({}, a, b);
+
 ```
 
 ps:对象的深拷贝见文档！
@@ -1606,21 +1788,56 @@ Object.is(NaN, NaN) // true
 
 参数：要拷贝到的对象上  要拷贝的值/对象
 
+Object.assign实际上是实现了一个mixin
+
+```
+//mixin不只有这一种实现方法。
+function mixin(receiver, supplier) {
+    Object.keys(supplier).forEach((key) => {
+    	receiver[key] = supplier[key]
+    })
+	return receiver
+}
+
+let a = {name: 'sb'};
+let b = {
+    c: {
+    	d: 5
+    }
+}
+console.log(mixin(a, b)) // {"name":"sb","c":{"d":5}}
+```
+
 最后合并成一个对象，只会拷贝自身对象的属性，不会拷贝继承属性，不会拷贝不可枚举的属性
 
 限制：浅拷贝
 
 ```
  console.log("拷贝", Object.assign({ a: "a" }, { b: "b" })); //{a: "a", b: "b"}
+```
 
+ **一个实现Component的例子** 
 
+```
+//声明一个对象Component
+let Component = {}
+//给对象添加原型方法
+Component.prototype = {
+    componentWillMount() {},
+    componentDidMount() {},
+    render() {console.log('render')}
+}
+//定义一个新的对象
+let MyComponent = {}
+//拷贝Component的方法和属性。
+Object.assign(MyComponent, Component.prototype)
+
+console.log(MyComponent.render()) // render
 ```
 
 ##### 补充es5：不可枚举
 
-枚举是指对象中的属性是否可以遍历出来，再简单点说就是属性是否可以以列举出来 
-
-
+枚举是指对象中的属性是否可以遍历出来，再简单点说就是属性是否可以列举出来 
 
 属性的枚举性会影响以下三个函数的结果：
 
@@ -1662,7 +1879,63 @@ JSON.stringify
 }
 ```
 
+##### 增强对象原型
 
+允许改变对象原型
+
+改变对象原型，是指在对象实例化之后，可以改变对象原型。我们使用 Object.setPrototypeOf() 来改变实例化后的对象原型。
+
+```
+let a = {
+    name() {
+    	return 'eryue'
+    }
+}
+let b = Object.create(a)
+console.log(b.name()) // eryue
+      
+//使用setPrototypeOf改变b的原型
+let c = {
+   name() {
+     return "sb"
+   }
+}    
+Object.setPrototypeOf(b, c)    
+console.log(b.name()) //sb
+```
+
+
+
+#### 自有属性枚举顺序
+
+ 规律，就是数字提前，按顺序排序，接着是字母排序。**Object.keys(), for in** 等方法也支持枚举自动排序 
+
+```
+const state = {
+    id: 1,
+    5: 5,
+    name: "eryue",
+    3: 3
+}
+    
+Object.getOwnPropertyNames(state) 
+//["3","5","id","name"] 枚举key
+
+Object.assign(state, null)
+//{"3":3,"5":5,"id":1,"name":"eryue"} 
+```
+
+#### 重复的对象字面量属性
+
+ES5的严格模式下，如果你的对象中出现了key相同的情况，那么就会抛出错误。而在ES6的严格模式下，不会报错，后面的key会覆盖掉前面相同的key。
+
+```
+    const state = {
+      id: 1,
+      id: 2
+    }
+    console.log(state.id) // 2
+```
 
 ### 十.Symbol数据类型
 
@@ -1822,7 +2095,7 @@ JSON.stringify
 
 ##### 数组去重
 
-- ps:转换类型的时候不做数据类型的转换，比如2和‘2’去不了重
+**ps:转换类型的时候不做数据类型的转换，比如2和‘2’去不了重**
 
 ```
 {
@@ -3075,7 +3348,7 @@ Iterator 的遍历过程是这样的。
 
 - 将iterator接口部署到指定的数据类型上：数组、Set 和 Map 容器、某些类似数组的对象（比如`arguments`对象、DOM NodeList 对象）、后文的 Generator 对象，以及字符串，可以使用for...of遍历
 - arguments可以用for...of却不可以用forEach，伪数组没有数组的方法哦！
-- obj is not iterable！！！
+- obj is not iterable！！！对象可以用for....in
 - `for...of`循环内部调用的是数据结构的`Symbol.iterator`遍历器方法
 
 ```

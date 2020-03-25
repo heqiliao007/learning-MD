@@ -350,13 +350,13 @@ align-items: stretch;
 {
 
 	display: flex;
-
+	
 	flex-direction: column;
-
+	
 	align-items: center;
-
+	
 	justify-content: center
-
+	
 	{
    		flex:1   //所有的子元素平均分配
  	}
@@ -687,6 +687,8 @@ git push origin master提交代码至线上
 	
 	git reset --soft HEAD^ //撤销本次提交，将本地仓库回滚到上一个版本，工作区和暂存区不变。
 	HEAD^表示上个提交版本，HEAD^^表示上上个提交版本，HEAD~n代表前面第n个版本
+gitbash 不能复制粘贴的使用快捷键 Ctrl/Shift+Insert 
+
 ## 补充
 
 <https://www.cnblogs.com/jlliu/p/11165741.html> 
