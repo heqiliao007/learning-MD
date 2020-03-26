@@ -729,7 +729,7 @@ savedPosition：记录滚动条滚动的位置
 
 和 HTML 中 header 部分的 meta 页面原信息类似，例如 description 有助于 seo 等，一般和路由没什么关系的配置可以写在这
 
-meta: { title: 'this is app', description: 'xxx' } 
+to.meta && setTitle(to.meta.title)
 
 #### 9.子路由 children/嵌套路由
 
@@ -767,6 +767,45 @@ css部分：
   transition: opacity  0.3s
 .fade-enter, .fade-leave-to
   opacity : 0
+  
+  
+//过渡组 为某个页面设置特定的动效
+<transition-group :name="routerTransition">
+    <router-view key="default"/>
+    <router-view key="email" name="email"/>
+    <router-view key="tel" name="tel"/>
+</transition-group>
+
+
+data () {
+    return {
+    	routerTransition: ''
+    }
+},
+watch: {
+    '$route' (to) {
+    	//url拼接是query参数后 有了transition的名字
+		to.query && to.query.transitionName && (this.routerTransition =  to.query.transitionName)
+    }
+},  
+.router-enter{
+  opacity: 0;
+}
+.router-enter-active{
+  transition: opacity 1s ease;
+}
+.router-enter-to{
+  opacity: 1;
+}
+.router-leave{
+  opacity: 1;
+}
+.router-leave-active{
+  transition: opacity 1s ease;
+}
+.router-leave-to{
+  opacity: 0;
+}
 ```
 
 #### 11.传递参数（编程式导航）
@@ -1038,51 +1077,215 @@ tag代表真实标签
 
 ### 十二.vuex
 
-#### 1.基础结构
+#### 1.单向流程
 
-单向数据流
+ dispatch触发actions   commit触发mutations，mutations去改变state的状态
 
-首先在main.js引入store
+在store文件下创建index.js  new Vuex.Store定义各个流程
 
-![](.\vue-img\vue基础\74.JPG)
+```
+在main.js文件中引入store
 
-commit去改变
+import store from './store'
 
-getters相当于computed
+new Vue中注册
 
-引入各个流程的文件后直接缩写声明
+new Vue({
+  router,
+  store,
+  created () {
+    bootstrap()
+  },
+  render: h => h(App)
+}).$mount('#app')
+```
 
-![](.\vue-img\vue基础\75.JPG)
+
 
 #### 2.state和getters
 
 两个帮助方法mapState，mapGetters辅助函数，都写在computed里
 
-...这种结构扩展运算符（使用一个工具函数将多个对象合并为一个，以使我们可以将最终对象传给 `computed` 属性 
+...这种结构扩展运算符（使用一个工具函数将多个对象合并为一个，以使我们可以将最终对象传给 `computed` 属性 ） 本身vue不支持 ，框架里.babelrc引入了babel-preset-stage-1
 
-） 本身vue不支持 ，框架里.babelrc引入了babel-preset-stage-1
+##### state
 
-使用mapState后如果同名 使用数组
+```
+//state
+//组件中
+import { mapState, mapGetters, mapMutations, mapActions } from 'vuex'
+computed: {
+	appName () {
+	  //获取根组件的state
+      return this.$store.state.appName
+    },
+    //获取模块中的state user模块
+    userName () {
+       return this.$store.state.user.userName
+    },
+    //解构赋值写法 展开操作符
+    //数组写法 同名可以写出这种 即命名名字和state里的名字一致
+    ...mapState([
+      'userName'
+      //如果不同名，字符串写法
+      anotherName：'userName'
+    ]),
+    //对象写法
+    ...mapState({
+      appName: state => state.appName,
+      //模块下写法
+      userName: state => state.user.userName
+    }),
+}
+//vuex如果在模块中使用了命名空间，此模块更加密闭，不受干扰
+export default {
+    namespaced: true,
+    getters,
+    state,
+    mutations,
+    actions
+}
 
-![](.\vue-img\vue基础\77.JPG)
+```
 
-如果不同名，使用字符串形式
+##### createNamespacedHelpers
 
-![](.\vue-img\vue基础\78.JPG)
+```
+//另一种模块下的state写法，
+import {createNamespacedHelpers } from "vuex";
+const {mapState,mapGetters} = createNamespacedHelpers("user");
+//第一个参数是可选的,传入模块名
+//在 user 中查找
+...mapState({
+    appName: state => state.appName
+}),
+```
 
-**更好的方式，使用方法**
+##### getter
 
-![](.\vue-img\vue基础\79.JPG)
+```
 
-mapGetters1和2方式一样
+//getter vuex中的getter相当于组件里的计算属性
+//在store里新建getters.js
+const getters = {
+  appNameWithVersion: (state) => {
+    //这里appName依赖于state中的字段
+    return `${state.appName}v2.0`
+  }
+}
+export default getters
 
-![](.\vue-img\vue基础\80.JPG)
+//在vuex的user模块下定义getter
+const getters = {
+  firstLetter: (state) => {
+  	//获取userName的
+    return state.userName.substr(0, 1)
+  }
+}
+
+//组件中使用getter
+appNameWithVersion () {
+	//获取根组件的getters
+   return this.$store.getters.appNameWithVersion
+},
+//mapGetters函数中获取根组件的getters
+...mapGetters([
+    'appNameWithVersion'
+]),
+//获取user模块中的getters  没有开启命名空间的前提下，也可以不用写模块名
+...mapGetters([
+    'firstLetter'
+]),
+//开启命名空间后，
+...mapGetters('user',[
+    'firstLetter'
+]),
+
+//createNamespacedHelpers里
+import {createNamespacedHelpers } from "vuex";
+const {mapState,mapGetters} = createNamespacedHelpers("user");
+...mapGetters('user',[
+    'firstLetter'
+]),
+```
 
 #### 3.mutation和action
 
+dispatch触发action ，多用于异步请求
+
 commit触发mutation
 
-commit只能传2个参数（payload）
+getters、mutations、actions不需要写模块名，vuex自动注册为全局，除非你想给它注册单独的命名空间
+
+##### mutation
+
+```
+//mutation
+//store.js下新建mutation.js
+import vue from 'vue'
+const mutations = {
+  SET_APP_NAME (state, params) {
+    //如果用写法2、3 就要写params.appName，如果是写法1  则直接=params即可
+    state.appName = params.appName
+    //如果用对象的写法 ，那么这个params参数就是一个对象，第一个参数就是type
+  },
+  SET_APP_VERSION (state) {
+  	//如果state部分没有定义appVersion，则必须使用vue.set来进行新的值的视图更新
+    vue.set(state, 'appVersion', 'v2.0')
+  },
+  SET_STATE_VALUE (state, value) {
+    state.stateValue = value
+  }
+}
+export default mutations
+
+//组件中
+handleChangeAppName () {
+	//写法1 无参数
+	this.$store.commit('SET_APP_NAME'),
+    //写法2
+    //这种写法只有2个参数
+	this.$store.commit('SET_APP_NAME',{
+         appName: 'newAppName'
+     })
+     //写法3  对象的写法可以有多个参数
+	 this.$store.commit({
+         type: 'SET_APP_NAME',
+         appName: 'newAppName',
+         .....
+     })
+}
+
+//mutation辅助函数
+import { mapMutations, mapActions } from 'vuex'
+ methods: {
+     ...mapMutations([
+          'SET_USER_NAME'
+    ]),
+    handleChangeAppName () {
+        //可以直接引用mutation中的函数
+        this.SET_USER_NAME('vue-cource')
+        //或者
+        this.SET_USER_NAME({
+            appName: 'vue-cource'
+        })
+    },
+}
+//模块中的mutations  user模块中
+const mutations = {
+  SET_USER_NAME (state, params) {
+    state.userName = params
+  },
+  SET_RULES (state, rules) {
+    state.rules = rules
+  }
+}
+//组件中使用  getters、mutations、actions不需要写模块名，vuex自动注册为全局，除非你想给它注册单独的命名空间
+this.SET_USER_NAME({
+   appName: 'vue-cource'
+})
+
+```
 
 如果是多个参数，可以弄成一个对象
 
@@ -1096,17 +1299,56 @@ commit只能传2个参数（payload）
 
 严格模式只能在开发环境加这个，加了后就不能直接改
 
+##### action
+
 mutation里只能放同步更新的代码，如果有异步的代码（比如数据请求）要去action里，用dispatch触发action
 
-![](.\vue-img\vue基础\86.JPG)
+```
+const actions = {
 
-![](C:\Users\Administrator\Pictures\vue\vue基础\87.JPG)
+ updateAppName ({ commit }) {
+    getAppName().then(res => {
+    //res.info.appName 就是 appName
+      const { info: { appName } } = res
+      commit('SET_APP_NAME', appName)
+    }).catch(err => {
+      console.log(err)
+    })
+  }
+  //await写法
+  async updateAppName ({ commit }) {
+    try {
+      const { info: { appName } } = await getAppName()
+      commit('SET_APP_NAME', appName)
+    } catch (err) {
+      console.log(err)
+    }
+  }
+}
 
-mapMutations和mapActions写在methods里
+//组件中
+ methods: {
+ 	//方式二
+    ...mapActions([
+        'updateAppName'
+    ]),
+    changeName(){
+    	//方式一 直接使用dispatch
+    	this.$store.dispatch('updateAppName', '123')
+    	//调用mapActions里的函数
+    	this.updateAppName()
+    }
+}
 
-![](.\vue-img\vue基础\90.JPG)
-
-![](C:\Users\Administrator\Pictures\vue\vue基础\89.JPG)
+//模块如果有namespaced  要加上模块名或者用createNamespacedHelpers
+//另一种模块下的state写法，
+import {createNamespacedHelpers } from "vuex";
+const { mapActions } = createNamespacedHelpers("user");
+//第一个参数是可选的,传入模块名
+...mapActions('user',{
+    appName: state => state.appName
+}),
+```
 
 #### 4.vuex模块
 
@@ -1229,6 +1471,74 @@ store.subscribeAction
 #### 8.plugin
 
 ![](.\vue-img\vue基础\110.JPG)
+
+#### 9.单向数据流
+
+```
+<template>
+  <input @input="handleInput" :value="value"/>
+</template>
+<script>
+export default {
+  name: 'AInput',
+  props: {
+    value: {
+      type: [String, Number],
+      default: ''
+    }
+  },
+  methods: {
+    handleInput (event) {
+      const value = event.target.value
+      this.$emit('input', value)
+    }
+  }
+}
+</script>
+
+父组件：
+<a-input v-model="stateValue"/>
+v-model实际上相当于t<a-input @input="handleInput" :value="inputValue"/>
+data () {
+    return {
+      inputValue: ''
+    }
+},
+methods: {
+    handleInput (val) {
+      this.inputValue = val
+    }
+}
+```
+
+#### 10.状态管理bus的使用
+
+```
+main.js
+import Bus from './lib/bus'
+Vue.prototype.$bus = Bus
+
+bus.js
+import Vue from 'vue'
+const Bus = new Vue()
+export default Bus
+
+组件
+<button @click="handleClick">按我</button>
+methods: {
+    handleClick () {
+    //兄弟组件传值
+      this.$bus.$emit('on-click', 'hello')
+    }
+}
+
+另一兄弟组件中：监听
+this.$bus.$on('on-click', mes => {
+      this.message = mes
+})
+```
+
+
 
 ### 十三.混入mixin
 
