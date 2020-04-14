@@ -1,4 +1,4 @@
-### 一.vue实例
+一.vue实例
 
 new出来的即为实例
 
@@ -504,8 +504,6 @@ v-model功能
 
 ![](.\vue-img\vue基础\27.JPG)
 
-![1566494936193](C:\Users\ADMINI~1\AppData\Local\Temp\1566494936193.png)
-
 ![](.\vue-img\vue基础\28.JPG)
 
 
@@ -514,13 +512,83 @@ v-model功能
 
 ![](.\vue-img\vue基础\29.JPG)
 
-### 九.高级属性
+### 九.状态管理bus的使用
+
+#### 单向数据流
+
+```
+<template>
+  <input @input="handleInput" :value="value"/>
+</template>
+<script>
+export default {
+  name: 'AInput',
+  props: {
+    value: {
+      type: [String, Number],
+      default: ''
+    }
+  },
+  methods: {
+    handleInput (event) {
+      const value = event.target.value
+      this.$emit('input', value)
+    }
+  }
+}
+</script>
+
+父组件：
+<a-input v-model="stateValue"/>
+v-model实际上相当于t<a-input @input="handleInput" :value="inputValue"/>
+data () {
+    return {
+      inputValue: ''
+    }
+},
+methods: {
+    handleInput (val) {
+      this.inputValue = val
+    }
+}
+```
+
+#### 状态管理bus
+
+```
+main.js
+import Bus from './lib/bus'
+Vue.prototype.$bus = Bus
+
+bus.js
+import Vue from 'vue'
+const Bus = new Vue()
+export default Bus
+
+组件
+<button @click="handleClick">按我</button>
+methods: {
+    handleClick () {
+    //兄弟组件传值
+      this.$bus.$emit('on-click', 'hello')
+    }
+}
+
+另一兄弟组件中：监听
+this.$bus.$on('on-click', mes => {
+      this.message = mes
+})
+```
+
+ // "lint": "vue-cli-service lint",
+
+### 十.高级属性
 
 #### 1.具名插槽
 
-![](.\vue-img\vue基础\30JPG.JPG)
+封装的组件中： <slot name="title"></slot>
 
-![](.\vue-img\vue基础\31.JPG)
+则引用组件的文件中可以写 <template slot="content">  xxx.... </template>
 
 #### 2.作用域插槽slot-scope
 
@@ -574,7 +642,7 @@ defineProperty给data指定value，相当于子（孙）组件每次调用value�
 
 以上方法并不是很推荐，因为以后的vue版本很有可能被改写
 
-### 十.render function
+### 十一.render function
 
 #### 1.渲染过程
 
@@ -620,7 +688,7 @@ domProps
 
 ![](.\vue-img\vue基础\52.JPG)
 
-### 十一.vue-router
+### 十二.vue-router
 
 vue-router自动在url后加#，默认hash模式
 
@@ -1075,7 +1143,7 @@ tag代表真实标签
 }
 ```
 
-### 十二.vuex
+### 十三.vuex
 
 #### 1.单向流程
 
@@ -1099,8 +1167,6 @@ new Vue({
   render: h => h(App)
 }).$mount('#app')
 ```
-
-
 
 #### 2.state和getters
 
@@ -1199,6 +1265,10 @@ appNameWithVersion () {
 //开启命名空间后，
 ...mapGetters('user',[
     'firstLetter'
+]),
+//或者
+...mapGetters([
+    'user/firstLetter'
 ]),
 
 //createNamespacedHelpers里
@@ -1301,6 +1371,7 @@ this.SET_USER_NAME({
 
 ##### action
 
+当 mutation 触发的时候，回调函数还没有被调用 
 mutation里只能放同步更新的代码，如果有异步的代码（比如数据请求）要去action里，用dispatch触发action
 
 ```
@@ -1326,6 +1397,18 @@ const actions = {
   }
 }
 
+//api.js模拟接口请求
+export const getAppName = () => {
+  return new Promise((resolve, reject) => {
+    const err = null
+    setTimeout(() => {
+      if (!err) resolve({ code: 200, info: { appName: 'newAppName' } })
+      else reject(err)
+    })
+  })
+}
+
+
 //组件中
  methods: {
  	//方式二
@@ -1336,21 +1419,24 @@ const actions = {
     	//方式一 直接使用dispatch
     	this.$store.dispatch('updateAppName', '123')
     	//调用mapActions里的函数
-    	this.updateAppName()
+    	this.updateAppName('123')
     }
 }
 
-//模块如果有namespaced  要加上模块名或者用createNamespacedHelpers
-//另一种模块下的state写法，
+//模块如果有namespaced  要加上模块名
+...mapActions('user',[
+    'updateAppName'
+]),
+//或者用createNamespacedHelpers
 import {createNamespacedHelpers } from "vuex";
 const { mapActions } = createNamespacedHelpers("user");
 //第一个参数是可选的,传入模块名
-...mapActions('user',{
-    appName: state => state.appName
-}),
+...mapActions([
+	'updateAppName'
+]),
 ```
 
-#### 4.vuex模块
+#### 4.vuex模块module
 
 namespaced: true, 
 
@@ -1358,43 +1444,77 @@ namespaced: true,
 
 ![](.\vue-img\vue基础\91.JPG)
 
-![](.\vue-img\vue基础\92.JPG)
-
-getters：
-
-![](.\vue-img\vue基础\94.JPG)
-
-![](.\vue-img\vue基础\93.JPG)
 
 用以上数组的方式不好用模板语法，因此更改为对象形式
 
 ![](.\vue-img\vue基础\95.JPG)
 
-拿到全局模式下的state或其他模块的state
+##### **拿到全局模式下的state或其他模块的state**
 
 getters方法内第二个参数是所有getter方法，第三个参数rootState是全局的state方法
 
+```
+getters: {
+    sumWithRootCount (state, getters, rootState, rootGetters) {
+      return state.count + rootState.count
+    }
+}
+```
+
 actions里方法第一个参数是ctx，这是个store对象，包含state，commit，rootState
 
-![](.\vue-img\vue基础\100.JPG)
+```
+const actions = {
+  updateUserName ({ commit, state, rootState, dispatch }) {
+    // rootState.appName 根vuex里的state
+  },
+  updateUserName ({ ctx, dispatch }) {
+  }
+}
+```
 
-![](.\vue-img\vue基础\96.JPG)
+如果你要调用其他模块或者全局里的mutations或action，需要加root:true，不然会报错（前提是声明了namespaced: true）
 
-要注意此时commit的updateText是默认action这个所在的命名空间里的updateText
-
-如果你要调用其他模块或者全局里的mutations，需要加root:true，不然会报错（前提是声明了namespaced: true）
-
-![](.\vue-img\vue基础\97.JPG)
-
-![](.\vue-img\vue基础\98.JPG)
-
-![](.\vue-img\vue基础\101.JPG)
-
-![](.\vue-img\vue基础\99.JPG)
-
-还可以模块下增加模块
+```
+ dispatch('someOtherAction', null, { root: true }) 
+```
 
 ##### 动态注册模块
+
+模块下增加模块
+
+```
+//xx.vue组件中
+registerModule () {
+    this.$store.registerModule('todo', {
+        state: {
+        	//一个数组
+            todoList: [
+                '学习mutations',
+                '学习actions'
+            ]
+        }
+    })
+	//给user模块添加一个todo模块
+    this.$store.registerModule(['user', 'todo'], {
+        state: {
+        	//一个数组
+            todoList: [
+                '学习mutations',
+                '学习actions'
+            ]
+        }
+    })
+},
+
+computed: {
+    ...mapState({
+      todoList: state => state.user.todo ? state.user.todo.todoList : [],
+    }),
+}
+```
+
+**全局注册**
 
 在index.js中全局路由去添加
 
@@ -1452,17 +1572,13 @@ if (module.hot) {
 
 #### 7.store.subscribe订阅
 
-制作一些插件时
+制作一些插件时，每次提交mutation后拿到回调函数
 
 ![](.\vue-img\vue基础\107.JPG)
 
-拿到回调函数，type打印调用了哪个mutation
+type打印调用了哪个mutation
 
 payload打印接收（传入）的参数
-
-![](.\vue-img\vue基础\82.JPG)
-
-![](.\vue-img\vue基础\108.JPG)
 
 store.subscribeAction
 
@@ -1470,72 +1586,97 @@ store.subscribeAction
 
 #### 8.plugin
 
-![](.\vue-img\vue基础\110.JPG)
-
-#### 9.单向数据流
+vuex存到内存，想将它存到本地--------持久化存储，
 
 ```
-<template>
-  <input @input="handleInput" :value="value"/>
-</template>
-<script>
-export default {
-  name: 'AInput',
-  props: {
-    value: {
-      type: [String, Number],
-      default: ''
-    }
-  },
-  methods: {
-    handleInput (event) {
-      const value = event.target.value
-      this.$emit('input', value)
-    }
+//plugins.js
+export default store => {
+  //当本地有存储的state，转成对象，替换掉实例中的store-----replaceState
+  if (localStorage.state) store.replaceState(JSON.parse(localStorage.state))
+  store.subscribe((mutation, state) => {
+    //对象转成字符串再存储
+    localStorage.state = JSON.stringify(state)
+  })
+}
+
+//index.js
+import saveInLocal from './plugin/saveInLocal'
+Vue.use(Vuex)
+export default new Vuex.Store({
+  strict: false,
+  state,
+  getters,
+  mutations,
+  actions,
+  plugins: [ saveInLocal ]
+})
+```
+
+#### 9.严格模式
+
+```
+export default new Vuex.Store({
+  //如果是开发环境 严格模式开启，如果为生产环境 关掉，这样就不会报错
+  strict: process.env.NODE_ENV === 'development',
+  state,
+  getters,
+  mutations,
+  actions,
+  plugins: [ saveInLocal ]
+})
+
+//strict: true表示要在mutation里设置state的值
+//process.env属性在Node中返回一个包含用户环境信息的对象，NODE_ENV是用户一个自定义的变量，在webpack中它的用途是判断生产环境或开发环境的依据的
+```
+
+#### 10.vuex双向绑定的问题
+
+```
+//state
+const state = {
+  appName: 'admin',
+  stateValue: 'abc'
+}
+
+//mutation
+const mutations = {
+  SET_STATE_VALUE (state, value) {
+    state.stateValue = value
   }
 }
+
+//组件中
+<template>
+	//方式一
+  <input @input="handleStateValueChange" :value="value"/>
+  
+  	//方式二
+  <input v-model="stateValue"/>
+</template>
+
+<script>
+methods: {
+    ...mapMutations([
+          'SET_STATE_VALUE'
+    ]),
+    //方式一
+    handleStateValueChange (val) {
+        this.SET_STATE_VALUE(val)
+    }
+}
+
+//方式二
+computed: {
+	stateValue: {
+          get () {
+            return this.$store.state.stateValue
+          },
+          set (val) {
+            this.SET_STATE_VALUE(val)
+          }
+    },
+}
 </script>
-
-父组件：
-<a-input v-model="stateValue"/>
-v-model实际上相当于t<a-input @input="handleInput" :value="inputValue"/>
-data () {
-    return {
-      inputValue: ''
-    }
-},
-methods: {
-    handleInput (val) {
-      this.inputValue = val
-    }
-}
-```
-
-#### 10.状态管理bus的使用
-
-```
-main.js
-import Bus from './lib/bus'
-Vue.prototype.$bus = Bus
-
-bus.js
-import Vue from 'vue'
-const Bus = new Vue()
-export default Bus
-
-组件
-<button @click="handleClick">按我</button>
-methods: {
-    handleClick () {
-    //兄弟组件传值
-      this.$bus.$emit('on-click', 'hello')
-    }
-}
-
-另一兄弟组件中：监听
-this.$bus.$on('on-click', mes => {
-      this.message = mes
-})
 ```
 
 
@@ -1684,8 +1825,6 @@ list是个数组进行遍历
 
 对比新旧vnode，第一次没有对比的时候把旧cnode全部渲染在vm.$el
 
-![1574971705738](C:\Users\ADMINI~1\AppData\Local\Temp\1574971705738.png)
-
 **流程**
 
 - updateComponent中实现了vdom的patch
@@ -1701,6 +1840,108 @@ list是个数组进行遍历
 ![](.\img\17.JPG)
 
 ![](.\img\18.JPG)
+
+### 十五.axios理解
+
+解决跨域
+
+代理
+
+```
+'/filesystem': {
+    target: 'http://192.168.0.200:21771/FileSystem',
+    ws: false,
+    changeOrigin: true,
+    pathRewrite: {
+    	'^/filesystem': ''
+    }
+},
+```
+
+封装axios
+
+```
+//使用
+import axios from './index'
+
+export const getUserInfo = ({ userId }) => {
+  return axios.request({
+    url: '/index/getUserInfo',
+    method: 'post',
+    data: {
+      userId
+    }
+  })
+}
+
+
+//index.js
+import HttpRequest from '@/lib/axios'
+const axios = new HttpRequest()
+export default axios
+
+//axios.js
+import axios from 'axios'
+import { baseURL } from '@/config'
+import { getToken } from '@/lib/util'
+class HttpRequest {
+  constructor (baseUrl = baseURL) {
+  	//基本路径
+    this.baseUrl = baseUrl
+    this.queue = {}
+  }
+  getInsideConfig () {
+  	//全局的一些配置
+    const config = {
+      baseURL: this.baseUrl,
+      headers: {
+        //
+      }
+    }
+    return config
+  }
+  distroy (url) {
+    delete this.queue[url]
+    if (!Object.keys(this.queue).length) {
+      // Spin.hide()
+    }
+  }
+  //拦截器方法
+  interceptors (instance, url) {
+    instance.interceptors.request.use(config => {
+      // 添加全局的loading...
+      if (!Object.keys(this.queue).length) {
+        // Spin.show()
+      }
+      this.queue[url] = true
+      config.headers['Authorization'] = getToken()
+      return config
+    }, error => {
+      return Promise.reject(error)
+    })
+    instance.interceptors.response.use(res => {
+      this.distroy(url)
+      const { data } = res
+      return data
+    }, error => {
+      this.distroy(url)
+      return Promise.reject(error.response.data)
+    })
+  }
+  request (options) {
+    const instance = axios.create()
+    options = Object.assign(this.getInsideConfig(), options)
+    //添加一个拦截器
+    this.interceptors(instance, options.url)
+    return instance(options)
+  }
+}
+export default HttpRequest
+```
+
+Mock.js模拟请求
+
+
 
 ### 补充：Webpack4搭建项目
 

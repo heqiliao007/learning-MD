@@ -565,11 +565,21 @@ dispatch=》commit
 
 间接的方式 在actions.js中去发ajax请求获取result.data==去commit给mutation的值，再在mutation里去更新状态，数据存到vuex的state中  2.读状态mapState（在computed里去读取） 3.渲染
 
+#### 权限控制
 
+简单权限控制
 
-#### 
+iview-admin
 
+ https://blog.csdn.net/qq_43436432/article/details/84374700 
 
+ canTurnTo会通过第二个参数（用户的权限字段列表）进行匹配，如果当前页面，当前用户是有权限的，显示当前页面，否则跳转到401页面 
+component，代表组件级别的路由权限  为true，代表可以访问这个页面
+为false代表访问不了
+这种方式有一个弊端，路由实例里每一个路由都要有一个name
+并且不能和path重复
+
+ 进行权限过滤时候，过滤的就是routerMap数组，匹配不到直接显示404页面 
 
 
 #### git命令
