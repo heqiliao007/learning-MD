@@ -230,6 +230,8 @@ module.exports = {
 
 es5两个作用域：全局和函数
 
+es5用var定义，没有用var定义的属于window的属性，不是真正意义的全局变量，但是因为window是全局项，所以也具有全局属性
+
 -  在函数内部声明的变量，都会被提升到该函数开头，而在全局声明的变量，就会提升到全局作用域的顶部 
 -  即使if语句的条件是false（程序未进入if判断，但在if判断里声明了变量），也一样不影响a变量提升 
 -  在函数嵌套函数的场景下，变量只会提升到最近的一个函数顶部，而不会提升到外部函数 
@@ -1298,6 +1300,44 @@ var arr = [1,2,3,4];
 arr.reduce(function(pre,cur){return pre + cur}); // return 10
 ```
 
+##### 函数式编程：函数组合compose
+
+简单需求复杂写法
+
+```
+  var testArr = ['start','middle','end'];
+  // 函数1：定义header 输入一个数组 返回数组的第一个元素
+  var header = arr => arr[0];
+  
+  //函数2: 定义reverse 输入一个数组 将数组中的元素倒转（顺便熟悉一下数组的归并方法reduce和reduceRight）
+  var reverse = function(arr){
+     return arr.reduceRight(function(prev,cur){
+         return prev.concat([cur])
+     },[])
+  }
+  //或以下写法
+  var reverse = (arr)=>arr.reduceRight((prev,cur)=>prev.concat([cur]),[])
+  console.log(reverse(testArr)); //  ["end", "middle", "start"]
+  
+  /*compose函数是一个封装 返回值也是一个函数 这个新函数传的参将被return的这个匿名函数接受
+    所以这里需要用到reduce(跟reduceRight一样 只不过是从左往右) 函数的第二个参数 将这个需要处理的参数传进来作为	初始值 交给...fns中的函数去处理*/
+  //相当于把arr交给reverse函数处理 然后返回值再交给header函数处理
+    var compose = function(...fns){
+      return function(arr){
+          return fns.reduce(function(val,fn){
+              return fn(val)
+          },arr)
+      }
+  }
+  
+  或以下写法
+  var compose = (...fns)=>(arr)=>fns.reduce((val,fn)=>fn(val),arr)
+  var last = compose(reverse,header)
+  console.log(last(testArr)); // 'end'
+```
+
+
+
 #### 空位的处理
 
 es5对空位的处理
@@ -1305,6 +1345,7 @@ es5对空位的处理
 <http://es6.ruanyifeng.com/#docs/array#%E6%95%B0%E7%BB%84%E7%9A%84%E7%A9%BA%E4%BD%8D> 
 
 ```
+
 forEach(), filter(), reduce(), every() 和some()都会跳过空位。
 map()会跳过空位，但会保留这个值
 join()和toString()会将空位视为undefined，而undefined和null会被处理成空字符串
