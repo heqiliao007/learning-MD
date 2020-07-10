@@ -2665,7 +2665,7 @@ https://www.jianshu.com/p/7b138b71e6fd
 
 #### Reflect反射对象
 
-Reflect不用new，直接用
+Reflect在编译阶段不知道被哪个类加载，在运行的时候加载、执行，不用new，直接用
 
 ```
 {
