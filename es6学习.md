@@ -230,7 +230,7 @@ module.exports = {
 
 es5两个作用域：全局和函数
 
-**es5用var定义，没有用var定义的属于window的属性（不管是否在函数内部），不是真正意义的全局变量，但是因为window是全局项，所以也具有全局属性**
+**es5用var定义，没有用var定义的属于window的属性（不管是否在函数内部），不是真正意义的全局变量，但是因为window是全局项，拥有全局作用域，换句话说，它是可以被 delete 的，而全局变量不可以。**
 
 -  在函数内部声明的变量，都会被提升到该函数开头，而在全局声明的变量，就会提升到全局作用域的顶部 
 -  即使if语句的条件是false（程序未进入if判断，但在if判断里声明了变量），也一样不影响a变量提升 
@@ -239,7 +239,7 @@ es5两个作用域：全局和函数
 
 es6增加：块作用域（大括号包围）
 
-临时死区的意思是在当前作用域的块内，在声明变量前的区域叫做临时死区 
+临时死区的意思是在当前作用域的块内，在声明变量前的区域叫做**临时死区** 
 
 ```
 function test(){
@@ -247,7 +247,7 @@ function test(){
 	for(let i=1;i<3;i++){
 		console.log(i) 
 	}
-	console.log(i)//i is not defined i无法污染外部函数，如果是var 跳出循环体还可以打印3
+	console.log(i)//i is not defined 因为i是let在块级作用域声明的，外部访问不到，如果是var声明，会做变量提					//升，跳出循环体还可以打印3
 }
 test();
 //第一个i输出1 2  第二个i报错
@@ -296,15 +296,43 @@ test();
 }
 ```
 
+##### 作用域总结
+
+1.常见的作用域主要分为几个类型：全局作用域(global/window)、函数作用域(function)、块状作用域({}}、动态作用域(this)
+
+2.作用域链
+如果一个 变量 或者其他表达式不在 “当前的作用域”，那么JavaScript机制会继续沿着作用域链上（向上）查找直到全局作用域（global或浏览器中的 window）如果找不到将不可被使用。 作用域也可以根据代码层次分层，以便子作用域可以访问父作用域，通常是指沿着链式的作用域链查找 ，而不能从父作用域引用子作用域中的变量和引用 
+
+两种方法外部拿到内部 屏蔽的变量，一是内部return 这个值，二是闭包
+
+3.块作用域起效必须搭配let或者const，否则在块作用域里声明{ var a = 4 }此时a会因为js机制做变量提升到外部var a，形不成隔离块
+
+4.作用域this是动态改变的，不等于window
+
+```
+window.a = 3;
+function test(){
+	console.log(this.a)
+}
+test(); //3
+test.bind({a:100})(); //100
+```
+
+5.词法作用域（你不知道的JavaScript）
+
+词法作用域：就是定义在词法阶段的作用域。在写代码时，将变量和块作用域写在哪里决定的。 
+https://www.cnblogs.com/lwl0812/p/9792162.html
+
 #### let总结
 
-1.let声明的变量只在块作用域有效
+1.let声明的变量是有块作用域的， let 声明的全局变量不是全局对象的属性，也就是说不可以通过 window.变量名 的方式访问这些变量
 
 2.es6强制使用严格模式，因此第二个i不是undefined而是报错not defined（变量未引用报错而不是undefined），l临时死区
 
-3.使用let不可重复定义变量，若重复浏览器会报错XXModule build failed
+3.使用let不可重复定义变量，若重复浏览器会报错 
+Uncaught SyntaxError: Identifier 'a' has already been declared 
 
-4.不会预处理，不存在变量提升
+4.let不会预处理，不存在变量提升
 
 5.循环遍历加监听，使用let取代var是趋势
 
@@ -333,13 +361,12 @@ if(true) {
 //请注意 以上是块级函数，也会被命名提升，除非在严格模式下
 ```
 
-1.常量const不能修改/不能重复赋值（不严谨），报错 xx is read-only
-
+1.const只能定义常量，常量const不能修改/不能重复赋值（不严谨），报错Assignment to constant variable.
 但是对象可以修改（因为对象是引用类型，返回的是存储内存的指针（地址），因此，是指针不可以改变const，但是指向这个指针的对象是可以变化的）
 
 2.const也有作用域
 
-3.const声明的同时必须赋值！！
+3.const初始化声明的同时必须赋值！！报错Missing initializer in const declaration
 
 ### 三.解构赋值
 
@@ -966,9 +993,54 @@ Math.log2()
 
 ### 七.数组扩展
 
+#### 思考：es5有多少种数组遍历的方法？
+
+for/ forEach/every/for....in
+异同
+1.forEach与for相比，写法更简洁，但不支持break，continue(因此也不支持return，因为forEach()无法在所有元素都传递给调用的函数之前终止遍历 )，其次，注意foreach内赋值问题，临时变量并不能 改变原对象的值 ，比如item = 1；要写成 arr[index] = 1
+2.every能不能向下遍历取决去你rerurn 的值，当return true的时候，才能向下遍历，可以用return false去代替break，用return true代替continue
+3.for...in是为object准备的，虽然能遍历数组（数组也是对象的一种），但是有问题，添加对象也会被循环出来(数组会被篡改)
+for...in支持continue和break，但注意 它的索引index是字符串！！！
+
+```
+let array = [1,2,3,4]
+arry.a = 8;//数组也是对象，可添加属性
+for(let index in array){
+	console.log(index,array[index])
+	// 0 1 2 3 a
+	// 1 2 3 4 8
+	if(index === 2){
+		continue;
+		console.log(index,array[index])
+	}
+	//把字符串变成数值
+	if(index*1 === 2){
+		continue;
+		console.log(index,array[index])
+	}
+}
+//ps 浏览器控制台 灰色字符串 值是蓝色
+```
+
+#### 前置：es6增加遍历的方法？
+
+for...of（除了数组和对象的遍历方法，es6允许自定义数据结构）
+
+```
+const Price = {
+	A:[1, 2, 3, 4, 5],
+	B:[1.5, 2.5, 3.5]
+}
+for(let key in Price){
+	console.log(key)//无法遍历出AB数组的每一个值
+}
+```
+
+
+
 #### 数组转换
 
-##### Array.of
+##### Array.of（如何生成新数组）
 
 用于将一组值，转换为数组 
 
@@ -1015,32 +1087,46 @@ function ArrayOf(){
 }
 ```
 
-##### Array.from
+##### Array.from（如何将伪数组转换成数组）
 
 将类数组（array-like object）和可遍历（iterable）的对象（包括 ES6 新增的数据结构 Set 和 Map）转真数组 
 
-伪数组就是没有真数组的一般方法
+**伪数组就是具备数组的特性（长度、遍历），没有真数组的一般方法（无法直接调用数组的方法）**
 
+语法Array.from(arryLike,mapFunction,thisArg) 
 实质也是 ` [].slice.call(obj)`的实现
 
 ```
 {
+	//es5中如何实现
+	let args = [].slice.call(obj);
+	let imgs = [].slice.call(document.querySelectorAll("img"));
+}
+
+{
 	// 把元素集合转义成数组
   	let p = document.querySelectorAll("p");
+  	//es6如何实现
   	let pArr = Array.from(p);
-  	//forEach es5
+  	//转换后可以用数组的forEach方法
   	pArr.forEach(item => {
     	console.log(item.textContent);
-	    //ES6
-	    //ES7
-	    //ES8
   	});
+  	
   	//映射关系map
   	//[2, 6, 10]  函数起了一个map的映射作用
   	console.log(Array.from([1, 3, 5], function(item){return item * 2}));
   	//或者
 	console.log(Array.from([1, 3, 5], item => item * 2));
   	// [2,6,10]
+}
+{
+	//Array.from初始化并填充默认值
+	//具有map也就是遍历的功能
+	let array = Array.from({length:5},function(){
+		return 1
+	})
+	
 }
 ```
 
@@ -1146,13 +1232,13 @@ function ArrayOf(){
 }
 ```
 
-#### findIndex
+#### findIndex（如何查找数组）
 
 返回第一个符合条件的数组成员的位置，如果所有成员都不符合条件，则返回`-1` 
 
 ```
 {
-	onsole.log([1, 2, 3, 4, 5, 6].findIndex(item => item > 3)); //3
+	console.log([1, 2, 3, 4, 5, 6].findIndex(item => item > 3)); //3
 }
 ```
 
