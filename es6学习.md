@@ -997,7 +997,7 @@ Math.log2()
 
 for/ forEach/every/for....in
 异同
-1.forEach与for相比，写法更简洁，但不支持break，continue(因此也不支持return，因为forEach()无法在所有元素都传递给调用的函数之前终止遍历 )，其次，注意foreach内赋值问题，临时变量并不能 改变原对象的值 ，比如item = 1；要写成 arr[index] = 1
+1.forEach与for相比，写法更简洁，但不支持break，continue(因此也不支持return，因为forEach()无法在所有元素都传递给调用的函数之前终止遍历 )，其次，注意foreach内赋值问题，临时变量并不能 改变原对象的值 ，比如item = 1；要写成 arr[index] = 1;思考：而引用对象则不同，对象属性的改变会改变原对象（浅拷贝）
 2.every能不能向下遍历取决去你rerurn 的值，当return true的时候，才能向下遍历，可以用return false去代替break，用return true代替continue
 3.for...in是为object准备的，虽然能遍历数组（数组也是对象的一种），但是有问题，添加对象也会被循环出来(数组会被篡改)
 for...in支持continue和break，但注意 它的索引index是字符串！！！
@@ -1034,23 +1034,75 @@ const Price = {
 for(let key in Price){
 	console.log(key)//无法遍历出AB数组的每一个值
 }
+// 要使Price可遍历，要使其具有iterator接口，对象不具有iterator接口
 ```
-
-
 
 #### 数组转换
 
-##### Array.of（如何生成新数组）
+##### Array.from（如何将伪数组转换成数组）
 
-用于将一组值，转换为数组 
+将类数组（array-like object）和可遍历（iterable）的对象（包括 ES6 新增的数据结构 Set 和 Map）转真数组 
 
-`Array.of`总是返回参数值组成的数组。如果没有参数，就返回一个空数组。
+**伪数组就是具备数组的特性（长度、遍历），没有真数组的一般方法（无法直接调用数组的方法）**
+
+语法Array.from(arryLike,mapFunction,thisArg) 
+实质也是 ` [].slice.call(obj)`的实现
 
 ```
-//这个方法的主要目的，是弥补数组构造函数Array()的不足。因为参数个数的不同，会导致Array()的行为有差异 
-Array() // []
+{
+	//es5中如何实现
+	let args = [].slice.call(obj);
+	let imgs = [].slice.call(document.querySelectorAll("img"));
+}
+{
+	//Array.from初始化并填充默认值
+	//具有map也就是遍历的功能
+	let array = Array.from({length:5},function(){
+		return 1
+	})
+	
+}
+{
+	// 把元素集合转义成数组
+  	let p = document.querySelectorAll("p");
+  	//es6如何实现
+  	let pArr = Array.from(p);
+  	//转换后可以用数组的forEach方法
+  	pArr.forEach(item => {
+    	console.log(item.textContent);
+  	});
+  	
+  	//映射关系map
+  	//[2, 6, 10]  函数起了一个map的映射作用
+  	console.log(Array.from([1, 3, 5], function(item){return item * 2}));
+  	//或者
+	console.log(Array.from([1, 3, 5], item => item * 2));
+  	// [2,6,10]
+}
+```
+
+#### 如何生成新数组
+
+##### Array.of
+
+也可以用于将一组值，转换为数组 
+
+`Array.of`总是返回参数值组成的数组。如果没有参数，就返回一个空数组。Array.of()这个方法的主要目的，是弥补数组构造函数Array()的不足。因为参数个数的不同，会导致Array()的行为有差异 
+
+```
+//es5 生成数组方法
+let array = Array(5) 
+//字面量方法 但是无法指定长度
+let array = ['','']
 Array(3) // [, , ,]
 Array(3, 11, 8) // [3, 11, 8]
+
+//es6生成方法
+//Array.prototype.of  =》  Array.of
+let arr = Array.of(1, 2, 7, 9, 11);
+
+//Array.prototype.fill =》 Array.fill
+let array = Array(5).fill(1); //[1, 1, 1, 1, 1]
 ```
 
 原理分析`Array.of`方法可以用下面的代码模拟实现。
@@ -1070,7 +1122,7 @@ function ArrayOf(){
 {
 	//把一组数据变量转换成数组类型
     let arr = Array.of(3, "sd", 7, 9, 11);
-  	console.log("arr=", arr); //[3, "sd", 7, 9, 11]
+  	console.log( arr); //[3, "sd", 7, 9, 11]
   	let arr = Array.of();
   	console.log("arr=", arr);//[]返回空数组
 }
@@ -1087,62 +1139,19 @@ function ArrayOf(){
 }
 ```
 
-##### Array.from（如何将伪数组转换成数组）
-
-将类数组（array-like object）和可遍历（iterable）的对象（包括 ES6 新增的数据结构 Set 和 Map）转真数组 
-
-**伪数组就是具备数组的特性（长度、遍历），没有真数组的一般方法（无法直接调用数组的方法）**
-
-语法Array.from(arryLike,mapFunction,thisArg) 
-实质也是 ` [].slice.call(obj)`的实现
-
-```
-{
-	//es5中如何实现
-	let args = [].slice.call(obj);
-	let imgs = [].slice.call(document.querySelectorAll("img"));
-}
-
-{
-	// 把元素集合转义成数组
-  	let p = document.querySelectorAll("p");
-  	//es6如何实现
-  	let pArr = Array.from(p);
-  	//转换后可以用数组的forEach方法
-  	pArr.forEach(item => {
-    	console.log(item.textContent);
-  	});
-  	
-  	//映射关系map
-  	//[2, 6, 10]  函数起了一个map的映射作用
-  	console.log(Array.from([1, 3, 5], function(item){return item * 2}));
-  	//或者
-	console.log(Array.from([1, 3, 5], item => item * 2));
-  	// [2,6,10]
-}
-{
-	//Array.from初始化并填充默认值
-	//具有map也就是遍历的功能
-	let array = Array.from({length:5},function(){
-		return 1
-	})
-	
-}
-```
-
-#### fill
+##### fill
 
 使用给定值，填充一个数组 
+语法：Array.fill(value,start,end) start,end有默认值，默认所有
 
 ```
 {
   	console.log([1, "a", undefined].fill(7)); // [7,7,7]
-  	// 填充数值 后两个参数 起始位置 终止位置
+  	// 填充数值 后两个参数 起始位置（包含）---终止位置（不包含）
+  	// 可以用于替换数组的值
   	console.log(["a", "b", "c", "d", "e"].fill(7, 1, 3)); //['a',7,7,'d','e']
 }
 ```
-
-
 
 #### 遍历相关
 
@@ -1221,9 +1230,20 @@ function ArrayOf(){
 
 ```
 
-#### find
+#### 如何查找数组
 
-用于找出第一个符合条件的数组成员 
+```
+// es5中如何实现----filter
+let array = [1,2,3,4,5];
+let find = array.filter(function(){
+	return item % 2 == 0 //筛选出所有符合条件的
+})
+
+```
+
+##### find
+
+用于找出第一个符合条件的数组成员 ，没有则返回undefined
 
 ```
 {
@@ -1232,9 +1252,9 @@ function ArrayOf(){
 }
 ```
 
-#### findIndex（如何查找数组）
+##### findIndex
 
-返回第一个符合条件的数组成员的位置，如果所有成员都不符合条件，则返回`-1` 
+返回第一个符合条件的数组成员的**位置**，如果所有成员都不符合条件，则返回`-1` 
 
 ```
 {
@@ -1467,12 +1487,12 @@ ES6 则是明确将空位转为`undefined`
     test2("kaka"); // kaka kaka
 }
 {
-  let x = "test";
-  function test2(c, y = x) {
-    console.log("作用域", c, y);
-  }
-  test2("kaka"); // kaka test
-  //不赋值的话是undefined
+    let x = "test";
+    function test2(c, y = x) {
+    	console.log("作用域", c, y);
+    }
+    test2("kaka"); // kaka test
+    //不赋值的话是undefined
 }
 {
 	//在ES5的严格模式下，arguments就不能在函数内修改默认值后跟随着跟新了
@@ -2870,6 +2890,64 @@ Reflect在编译阶段不知道被哪个类加载，在运行的时候加载、�
 
 ### 十三.类与对象
 
+```
+// es5如何实现类的定义/声明---用函数去模拟
+// 构造函数2个作用 1.传参数 2.初始化
+let Animal = function (type) { 
+    this.type = type 
+    this.walk = function () {
+    	console.log(`I am walking`) 
+    }
+}
+let dog = new Animal('dog') 
+let monkey = new Animal('monkey')
+
+monkey.eat = function(){
+	console.log(`error`) //只修改了monkey的 没有修改到dog的eat方法
+}
+// 弊端：每个实例对象都有type属性和walk方法，如果想修改eat的方法，违背了继承的原则，而且生成的对象很大
+
+
+// 改进
+let Animal = function (type) { 
+	this.type = type 
+}
+//把walk写到原型链上（类继承的原理）
+Animal.prototype.walk = function () { 
+	console.log(`I am walking`) 
+}
+//修改原型链的eat方法
+monkey.constructor.prototype.eat = function(){
+	Animal.walk();
+	this.walk(); //会报错 this指的是实例对象，静态方法不是挂在实例对象上
+	console.log(`error`) //只修改了monkey的 没有修改到dog的eat方法
+}
+let dog = new Animal('dog') 
+let monkey = new Animal('monkey')
+
+//es5的静态方法（挂载到类而不是实例对象）
+//定义
+Animal.walk = function(){
+	console.log(`I am walking`) 
+}
+//通过调用实例对象的eat方法去调用静态方法walk
+dog.eat();
+dog.walk(); //is not a function 没找到 实例对象上没有walk方法
+
+//es6的方法
+class Animal { 
+    constructor (type) { 
+        this.type = type 
+    }
+    walk () { 
+    	console.log(`I am walking`)
+    } 
+}
+let dog = new Animal('dog') 
+let monkey = new Animal('monkey')
+console.log(typeof Animal); //function 说明class实际就是构造函数的语法糖
+```
+
 #### 基本定义及生成实例
 
 ```
@@ -2899,60 +2977,41 @@ typeof Parent //"function"
 
 由此可见，es6的类实际是function的语法糖
 
-#### 继承
+#### 如何读写属性
 
-super 指向父类，相当于 A.prototype.constructor.call(this)
+#####  getter和setter
 
 ```
+// es6如何做到属性的保护和只读
+// getter和setter + functuon就变成了类的属性
+
 {
-	//继承传递参数，也就是子类覆盖父类
-	class Parent{
-		//定义构造函数
-		constructor(name = "muke") {
-	      this.name = name;
-	    };
-	    a(){
-            console.log('aa');
-	    }
-	}
+	let _age = 4;
 	
-	class Child extends Parent{
-		constructor(name = "child") {
-	      //如果super参数为空，则会使用所有父类的默认值此外，super必须放在子类的第一行
-	      //调用super方法，得到子类的this对象
-	      super(name);
-	      //如果子类还要添加自己的属性，则this必须放在super后面
-	      this.type = 'child';
-	    }
-	    //父类的方法重写
-	    a(){
-            console.log('bb');
-	    }
-	}
-	let p1 = new Child('111')
-	console.log(p1)//_Child {name: "111", type: "child"}
-	p1.a();//bb
-	console.log('继承',new Child()); //继承 _Child {name: "child", type: "child"}
-	console.log('继承',new Child('hello')); //继承 _Child {name: "hello", type: "child"} 参数覆盖
-}
-```
-
-#### getter和setter
-
-```
-{
 	class Parent{
 		//定义构造函数
 		constructor(name = "muke") {
 	      this.name = name;
 	    }
 		//注意！get是属性并不是方法！！！
+		// get 只读
 		get longName(){
 			return 'mk'+this.name;
+		}
+		get age(){
+			//age 是属性，是暴露出的这个类的属性，通过它操作私有属性_age,也就是闭包的方法
+			return _age;
+		}
+		set age(val){
+			//set/get可做拦截
+			if( val > 2 ){
+				_age = val;
+			}
 		}
 		
 		set longName(value){
 			this.name = value;
+			
 		}
 	}
 	let v = new Parent();
@@ -2961,6 +3020,9 @@ super 指向父类，相当于 A.prototype.constructor.call(this)
     // 赋值就等于 set 操作
 	v.longName = "hello";
 	console.log("setter", v.longName); //mkhello
+	
+	//私有属性_age
+	console.log("getter 私有", v._age); //undefined 肯定是直接读取不到_age属性的
 }
 ```
 
@@ -2981,11 +3043,82 @@ super 指向父类，相当于 A.prototype.constructor.call(this)
 	    static tell() {
 	      console.log("tell");
 	    }
+	    // 非静态方法
+	    talk() {
+	      console.log("talk");
+	    }
 	}
 	Parent.tell(); //tell
 	// 在类上直接定义静态属性
   	Parent.type = "test";
   	console.log("静态属性", Parent.type); //静态属性 test
+}
+```
+
+##### 总结
+
+1.es6 用static识别静态方法
+
+2.区分何时用静态方法：方法内部要引用实例对象的内容时就要使用实例对象的方法，否则就要用类的静态方法，因为类的静态方法拿不到当前类的实例对象
+
+#### 如何继承一个类
+
+```
+//es5如何做继承  详细见js基础深入.md
+function Parent1(){
+	this.name = "parent1";
+}
+
+function Child(){
+    // 同时修改了父级构造函数this的指向，从而导致了父类执行的时候属性都会挂在Child类实例上去。
+    Parent1.call(this);
+    this.type="child1";
+}
+//why加这步骤：只实现了部分继承，如果父类的属性都在构造函数上，那没有问题；如果父类的原型对象上还有方法（原型链
+//的方法），子类是拿不到这些方法的
+Child.prototype = Parent.prototype;//引用类型 共享一块内存 ---》改变原型链指向
+console.log(new Child());//Child {name: "parent1", type: "child1"}
+```
+
+##### super
+
+super 指向父类，相当于 A.prototype.constructor.call(this)
+
+constructor可以忽略不写，因为子类extends后有默认值，但是如果你想添加子类自己的属性或方法，必须显示调用constructor，且super方法必须位于构造器内第一行
+
+```
+{
+	//继承传递参数，也就是子类覆盖父类
+	class Parent{
+		//定义构造函数
+		constructor(name = "muke") {
+	      this.name = name;
+	    };
+	    a(){
+            console.log('aa');
+	    }
+	}
+	
+	class Child extends Parent{
+		//constructor可以忽略不写，因为子类extends后有默认值，但是如果你想添加子类自己的属性或方法，必须显示调		// 用constructor，且super方法必须位于构造器内第一行
+		constructor(name = "child") {
+	      //如果super参数为空，则会使用所有父类的默认值此外，super必须放在子类的第一行
+	      //调用super方法，得到子类的this对象
+	      super(name);
+	      
+	      //如果子类还要添加自己的属性，则this必须放在super后面
+	      this.type = 'child';
+	    }
+	    //父类的方法重写
+	    a(){
+            console.log('bb');
+	    }
+	}
+	let p1 = new Child('111')
+	console.log(p1)//_Child {name: "111", type: "child"}
+	p1.a();//bb
+	console.log('继承',new Child()); //继承 _Child {name: "child", type: "child"}
+	console.log('继承',new Child('hello')); //继承 _Child {name: "hello", type: "child"} 参数覆盖
 }
 ```
 
@@ -4374,9 +4507,62 @@ for...in循环枚举的时候，对象是枚举的key（属性名），数组枚
 
 详见数组扩展
 
+### es11扩展
 
+#### 可选链操作符 
 
-### 实战---彩票项目
+Optional chaining operator
+
+ https://blog.csdn.net/Smell_rookie/article/details/103840271 
+
+```
+//es5
+console.log(this.obj && this.obj.useInfo && this.obj.userInfo.other && this.obj.userInfo.other.name)
+//可选链操作符
+console.log(this.obj?.userInfo?.other?..name)
+
+//es5
+function getLeadingActor(movie) {
+  if (movie.actors && movie.actors.length > 0) {
+    return movie.actors[0].name;
+  }
+}
+//可选链
+function getLeadingActor(movie) {
+  return movie.actors?.[0]?.name;
+}
+
+const arr=[1,2,3]
+//  es5
+if(arr.length){
+	arr.map(res=>{
+		//处理你的罗晋
+	})
+}
+// 可选链
+   arr?.map(item=>{
+       //处理你的逻辑
+   })
+
+```
+
+####   空值合并运算符 
+
+```
+let c = a ?? b
+//等价于 特别适用于值为0的时候
+let c = a !== undefined  && a !== null ? a : b
+
+let c = 0 // 真实有效的输入值
+let d =c ?? 9000  // 0
+
+```
+
+#### Promise.allSettled()
+
+ Promise.allSettled()不管参数中的promise是fulfilled还是rejected，都会等参数中的实例都返回结果，包装实例才会结束。 
+
+### 实战---彩票项目（选）
 
 #### 项目介绍
 
