@@ -2037,7 +2037,7 @@ Object.is(NaN, NaN) // true
 
 参数：要拷贝到的对象上  要拷贝的值/对象
 
-Object.assign实际上是实现了一个mixin
+ Object.assign(target, ...sources) 实际上是实现了一个mixin
 
 ```
 //mixin不只有这一种实现方法。
@@ -2057,12 +2057,36 @@ let b = {
 console.log(mixin(a, b)) // {"name":"sb","c":{"d":5}}
 ```
 
-最后合并成一个对象，只会拷贝自身对象的属性，不会拷贝继承属性，不会拷贝不可枚举的属性
+最后合并成一个对象，只会拷贝自身对象的属性，不会拷贝继承属性，不会拷贝不可枚举的属性， 如果`undefined`和`null`不在首参数，就不会报错 ，首参数表示target，表示target不能为undefined或null，而target可以
 
 限制：浅拷贝
 
 ```
- console.log("拷贝", Object.assign({ a: "a" }, { b: "b" })); //{a: "a", b: "b"}
+let target = {
+    a: {
+    	b: {
+    		c: {
+    			aa: 1
+    		}
+    	}
+    },
+    d: 6,
+    e: 7,
+    f: 8
+}
+let source = {
+    a: {
+    	b: {
+    		c: {
+    			aa: 1
+    		}
+    	}
+    },
+    d: 9,
+    e: 10
+}
+Object.assign(target,...source);
+console.log("拷贝",target)
 ```
 
  **一个实现Component的例子** 
