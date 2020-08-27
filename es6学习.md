@@ -58,8 +58,6 @@ express框架：
 
 4. 回到构建目录，tasks目录补充，在tasks下创建util文件夹，在util文件夹下创建args.js文件。
 
-![](C:\Users\Administrator\Pictures\es6\3.JPG)
-
 5.在根目录下初始化package.json
 
 npm init 一路回车
@@ -222,6 +220,15 @@ module.exports = {
     port: 9000
   }
 }
+```
+
+新版环境 6-10，免去配置环境
+
+```
+$ npm i es10-cli -g 
+$ es10-cli create projectName 
+$ cd projectName 
+$ npm start
 ```
 
 ### 二.let和const
@@ -2829,11 +2836,12 @@ ps：**map的forEach的value、key刚好和本身的结构相反**
 
 #### Proxy代理对象
 
+proxy作用:**屏蔽原始数据，进行代理**，有点像中介
 new Proxy(target(可为空)，handler(类似json对象))
-
 get 方法 访问数据，三个参数，需要return 
-
 set、has、deleteProperty、apply（调用函数处理）
+
+##### Proxy API
 
 ```
 {
@@ -2843,10 +2851,13 @@ set、has、deleteProperty、apply（调用函数处理）
 	    name: "net",
 	    _r: 123
 	  };
+	  
 	//2.通过代理商 Proxy新创建对象 花括号里是代理的东西
+	let monitor = new Proxy(obj,{})//代表什么也没操作
 	
+	//以下是代理操作，比原始如对象里有个价格属性，中介也就是proxy要把价格增加，就是一种代理操作
 	let monitor = new Proxy(obj,{
-		//拦截 或者说代理对象属性的读取
+		//拦截 或者说代理对象属性的读取 target是代理的真实对象
 		get(target,key){
 			//get方法用于拦截某个属性的读取操作，可以接受三个参数，
 			//依次为目标对象、属性名和 proxy 实例本身（严格地说，是操作行为所针对的对象），其中最后一个参数可选
@@ -2859,8 +2870,9 @@ set、has、deleteProperty、apply（调用函数处理）
 			//依次为目标对象obj、属性名、属性值和 Proxy 实例本身，其中最后一个参数可选
 			if(key === 'name'){
 				return target[key] = value;
-			}else{
-				return target[key];
+			}else if(key === 'price'){
+				//涨价
+				return target[key] + 20;
 			}
 		},
 		
@@ -2893,6 +2905,7 @@ set、has、deleteProperty、apply（调用函数处理）
 	      return Object.keys(target).filter(item => item != "time");
 	    }
 	});
+	
 	//3.对于用户来说，就是直接操作monitor对象
 	console.log("get", monitor.time);//get 2019-07-08
 	monitor.time = '2017';
@@ -2923,7 +2936,196 @@ set、has、deleteProperty、apply（调用函数处理）
 
 `ownKeys`方法返回的数组成员，只能是字符串或 Symbol 值。如果有其他类型的值，或者返回的根本不是数组，就会报错 
 
-##### es5：defineProperty() 
+##### proxy使用场景
+
+1.数据拦截，只可读，用户不可修改原数据（保护原始数据）
+
+```
+//从后端拿到的数据对象还原 比如排序后要还原
+let o = {
+	name: 'xxx',
+	age: 18
+}
+let monitor = new Proxy(o,{
+	get(target,key){
+		return target[key];
+    },
+    set(target,key,value){
+    	//拦截赋值操作 不让修改
+		return false;
+    },
+})
+monitor.age = 20; //set中的value变为20，但是并未赋值成功，o对象并未修改
+console.log(monitor.name,monitor.age) //xxx 18
+
+//es5 实现
+for(let [key] of Object.entries(o)){
+	Object.defineProperty(o,key,{
+		//属性描述符
+		writable: false //被锁死，用户无法操作，但是同时自己也无法操作
+		//推荐代理：自己可操作，拦截用户
+	}
+}
+```
+
+2.数据校验，降低耦合，更加优雅
+
+```
+{
+	//验证数据：比如格式等
+	//拦截无效数据
+	//数据结构不被破坏
+	let o = {
+        name: 'xxx',
+        price: 190
+    }
+    let monitor = new Proxy(o,{
+        get(target,key){
+            return target[key] || '';//避免undefined
+        },
+        set(target,key,value){
+            //判断target上有无此key
+            if(Reflect.has(target,key)){
+            	if(key === 'price'){
+            		if(value>300){
+            		   return false;
+            		}else{
+            		   value = target[key];
+            		}
+            	}else{
+            		value = target[key];
+            	}
+            }else{
+            	return false;
+            }
+        },
+    })
+    monitor.price = 280;
+    console.log(monitor.price)//280
+    monitor.price = 301;
+    console.log(monitor.price)//190  数据不改变
+    monitor.age = 18; //空 赋值失败，新值（数据结构不被破坏）
+}
+
+//解耦写法
+let validater = (target,key,value) = > {
+	if(Reflect.has(target,key)){
+        if(key === 'price'){
+            if(value>300){
+                return false;
+            }else{
+                value = target[key];
+            }
+        }else{
+            value = target[key];
+        }
+     }else{
+        return false;
+     }
+}
+
+ let monitor = new Proxy(o,{
+        get(target,key){
+            return target[key] || '';//避免undefined
+        },
+        set: validater
+ })
+```
+
+3.监控上报
+
+```
+//更加解耦完成上报机制
+window.addEventListener('error',(e) => {
+	console.log(e.message);
+	report(./)//上报逻辑
+//捕获错误true
+},true)
+
+let validater = (target,key,value) = > {
+	if(Reflect.has(target,key)){
+        if(key === 'price'){
+            if(value>300){
+            	//不满足规则触发错误
+                throw new TypeError('price exceed 300');
+            }else{
+                value = target[key];
+            }
+        }else{
+            value = target[key];
+        }
+     }else{
+        return false;
+     }
+}
+```
+
+4.组件id只读且唯一
+
+```
+//识别组件，id且唯一
+class Component(){
+	//构造函数
+	constructor(){
+		//随机id  换成字符串 36进制，截取后8位
+		this.id = Math.random().toString(36).slice(-8);
+	}
+	//只读属性
+	get id(){
+		//随机id  换成字符串 36进制，截取后8位
+		return Math.random().toString(36).slice(-8);
+	}
+	//修改id时发现上面两种写法 又重新生成新的随机id，换成下面这个写法
+	constructor(){
+		this.proxy = new Proxy({
+			id: Math.random().toString(36).slice(-8);
+		},{})
+	}
+	get id(){
+		return this.proxy.id
+	}
+	
+}
+let com = new Component()
+let com2 = new Component()
+for(let i=0; i<10; i++){
+	console.log(com.id,com2.id)
+}
+com.id = 'abc';
+console.log(com.id,com2.id)
+```
+
+#####  Proxy.*revocable* 
+
+可以用来创建一个可撤销的代理对象，临时代理场景！！！
+可撤销代理相当于把房子租给中介后，撤销合同，代理失效
+
+```
+{
+    let o = {
+        name: 'xxx',
+        age: 18
+    }
+    //可撤销 两部分内容，包含代理数据和撤销操作：proxy revoke
+    let monitor = Proxy.revocable(o,{
+        get(target,key){
+            return target[key];
+        },
+        set(target,key,value){
+            return false;
+        },
+    })
+    console.log(monitor.proxy.name,monitor) //两部分proxy revoke
+    //场景有点像阅后即焚的既视感
+	setTimeout(() => {
+		monitor.revoke();
+		console.log(monitor.proxy.name)//无法读取
+	},1000)
+}
+```
+
+
+##### es5补充：Object.defineProperty() 
 
 数据劫持-----知道数据的变化
 
@@ -2989,7 +3191,8 @@ https://www.jianshu.com/p/7b138b71e6fd
 
 #### Reflect反射对象
 
-Reflect在编译阶段不知道被哪个类加载，在运行的时候加载、执行，不用new，直接用
+Reflect在编译阶段不知道被哪个类加载，在运行的时候加载、执行，才知道被哪个类加载，不用new，直接用
+
 
 ```
 {
@@ -3006,11 +3209,72 @@ Reflect在编译阶段不知道被哪个类加载，在运行的时候加载、�
 }
 ```
 
-##### Reflect.apply(func, thisArg, args) 
+##### Reflect.apply
 
-`Reflect.apply`方法等同于`Function.prototype.apply.call(func, thisArg, args)`，用于绑定`this`对象后执行给定函数。
+`Reflect.apply`(func, thisArg, args) 方法等同于`Function.prototype.apply.call(func, thisArg, args)`，用于绑定`this`对象后执行给定函数。
 
 一般来说，如果要绑定一个函数的`this`对象，可以这样写`fn.apply(obj, args)`，但是如果函数定义了自己的`apply`方法，就只能写成`Function.prototype.apply.call(fn, obj, args)`，采用`Reflect`对象可以简化这种操作
+
+```
+//js中 使用apply方法时必须知道是被哪个函数所调用
+//反射机制中，先调用apply，再去指定哪个函数
+
+//实例 向下取整 null代表作用域 这里暂时没有
+Math.floor.apply(null,[3.72])
+Reflect.apply(Math.floor,null,[3.72]) //4
+
+//实例 反射 3元表达式
+Reflect.apply(price>100 : Math.floor, Math.cell, null, [3.72])
+```
+
+##### Reflect.construct
+
+之前的做法如果实例化一个类要用new，new不同的类，反射机制中construct(target, argumentsList[, newTarget])是构造函数的意思
+
+```
+let d = new Date();
+console.log(d.getTime());
+
+//Reflect.construct可以做到不用new,
+let d = Reflect.construct(Date,[]);
+console.log(d instanceof Date);//与new没有什么区别
+```
+
+##### Reflect.defineProperty
+
+定义对象(新增一个属性)
+
+```
+//es5
+const student = {}
+let test1 = Object.defineProperty(student,'name',{ value:'mike' })
+//es6
+let test2 = Reflect.defineProperty(student,'name',{ value:'mike' })
+//区别：返回值不同
+console.log(student,test2)//{name: "mike"} true 而test1返回的是一个对象
+```
+
+##### Reflect.deleteProperty
+
+删除一个属性
+
+```
+//同样是obj.deleteProperty()的迁移,区别同样是返回值不同
+const obj = {x:1, y:2}
+Reflect.deleteProperty(obj,'x');
+console.log(obj)//{y:2}
+```
+
+##### Reflect.get
+
+读取数据
+
+```
+const obj = {x:1, y:2};
+console.log(Reflect.get(obj,'x'))//1
+//读取数组更方便
+console.log(Reflect.get([3,4],1))//3  读取第一个
+```
 
 #### 开发中的实例
 
@@ -3561,7 +3825,7 @@ timeout2
 test()
     .then(()=>{
       console.log("success1");
-      要return;
+      要return 一个promise对象; 不能直接调用test()
     },(err)=>{
       console.log("fail1");
     })
@@ -3574,7 +3838,7 @@ test()
  
  //这种方式如果执行reject后因为状态不可逆，就无法执行then的第一个参数方法，同理，如果执行成功后，就无法执行err方法,但是，执行err后，.then会返回一个空的promise对象，test又进行到下一个.then方法
  
- //如果第一次then执行了onFullfilled函数，onFullfilled里的逻辑调用promise的reject，按道理，第二次then应该直接进入到err方法里执行，但是如果第一次then里没有return返回值（promise对象），第二次会调用then的onFullfilled函数
+ //如果第一次then执行了onReject函数，onReject里的逻辑调用promise的reject，按道理，第二次then应该直接进入到err方法里执行，但是如果第一次then里没有return返回值（promise对象），第二次会调用then的onFullfilled函数
  
  //如果then无法直接返回一个promise异步操作，可以调用promise的静态方法（用promise类来调用）生成promise实例，Promise.resolve(xx)或者Promise.reject()
  
@@ -3582,6 +3846,7 @@ test()
 
 #### 捕获异常错误catch
 
+更优雅的方法处理错误,.catch写到then最后，catch是promise对象的原型方法
 语法错误Error和逻辑错误reject都可以通过catch来捕获，所以promise最好只传一个成功的回调就好了，失败的进入catch来捕获
 
 ```
@@ -3593,14 +3858,19 @@ test()
 	      if (num > 5) {
 	        resolve();
 	      } else {
-	        throw new Error("出错");
+	        throw new Error("出错");//实际情况写reject来改变promise的状态，不能写throw Error，catch捕获状                                     //态改变时的错误·
 	      }
 	    });
     };
     //使用
-    ajax(4)
+    ajax(6)
     .then(function() {
       console.log("log", 4);
+      return ajax(7);
+    })
+    .then(function() {
+      console.log("log", 4);
+      return ajax(4);
     })
     .catch(function(err) {
       console.log("catch", err); // catch Error: 出错
@@ -3696,7 +3966,19 @@ test()
 
 ##### Promise.all
 
-Promise.all待全部完成后，统一执行success，成功的时候返回的是一个结果数组，而失败的时候则返回最先被reject失败状态的值 
+Promise.all实际就是一种并行，待全部完成后，统一执行success，成功的时候返回的是一个结果数组，而失败的时候则返回最先被reject失败状态的值 
+
+```
+const p1 = Promise.resolve(1);
+const p2 = Promise.resolve(2);
+const p3 = Promise.resolve(3);
+
+Promise.all([
+	p1,p2,p3
+]).then((value)=>{
+	console.log(value); //1 2 3
+})
+```
 
 ###### **使用场景**
 
@@ -3723,7 +4005,7 @@ Promise.all待全部完成后，统一执行success，成功的时候返回的�
 	
 	// 把多个Promise实例当作一个实例
 	Promise.all([
-		loading('http://chuantu.xyz/t6/702/1570366675x992245926.jpg'),
+	    loading('http://chuantu.xyz/t6/702/1570366675x992245926.jpg'),
         loading('http://chuantu.xyz/t6/702/1570366675x992245926.jpg'),
         loading('http://chuantu.xyz/t6/702/1570366675x992245926.jpg')
 	]).then(showImgs)
@@ -3753,7 +4035,7 @@ Promise.all([p1, p2]).then((result) => {
 
 ##### **Promise.race**
 
-**Promse.race就是赛跑的意思，意思就是说，Promise.race([p1, p2, p3])里面哪个结果获得的快，就返回那个结果，不管结果本身是成功状态还是失败状态** 
+**Promse.race先到先得，就是赛跑的意思，意思就是说，Promise.race([p1, p2, p3])里面哪个结果获得的快，就返回那个结果，不管结果本身是成功状态还是失败状态** 
 
 ###### **使用场景**
 
