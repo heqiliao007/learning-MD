@@ -1560,7 +1560,7 @@ if (module.hot) {
 
 ![](.\vue-img\vue基础\104.JPG)
 
-![](.\vue-img\105.JPG)
+![](.\vue-img\vue基础\105.JPG)
 
 #### 6.store.watch
 

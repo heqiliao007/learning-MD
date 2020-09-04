@@ -1288,7 +1288,7 @@ let find = array.filter(function(){
 
 ##### find
 
-用于找出第一个符合条件的数组成员 ，没有则返回undefined
+用于找出**第一个**符合条件的数组成员 ，没有则返回undefined
 
 ```
 {
@@ -1307,9 +1307,9 @@ let find = array.filter(function(){
 }
 ```
 
-####  includes（es7）
+####  <a name="#includes">includes（es7）</a>
 
-`Array.prototype.includes`方法返回一个布尔值，表示某个数组是否包含给定的值 ，替代es5的indexOf
+`Array.prototype.includes`方法返回一个布尔值，表示某个数组是否**包含**给定的值 ，替代es5的indexOf
 
 ```
 {
@@ -2192,11 +2192,24 @@ JSON.stringify
 ```
 {
 	  let test = { k: 123, o: 456 };
+	  //Object.entries作用：把不支持for...of的对象变成可遍历对象
+	  //[key,value]是一种解构赋值的写法
 	  for (let [key, value] of Object.entries(test)) {
 	    console.log([key, value]);
 	    // ["k", 123]
 	    // ["o", 456]
-   }
+      }
+}
+
+{
+	//es5
+	for (let item in test) {
+	    if(item === 'k'){
+	    	
+	    }
+     }
+	//es6更优雅的写法
+	Object.keys(test).filter(item = > item === 'k')
 }
 ```
 
@@ -3032,7 +3045,7 @@ let validater = (target,key,value) = > {
  })
 ```
 
-3.监控上报
+3.验证结合监控上报
 
 ```
 //更加解耦完成上报机制
@@ -4086,6 +4099,7 @@ Promise.all([p1, p2]).then((result) => {
 但是背后的iterator接口是不一样的
 
 - 也就是说只有部署了iterator接口，才能被 for...of遍历
+- 或者说任何数据结构只要部署 Iterator 接口， 就可以完成遍历操作 
 
 #### iterator 遍历过程
 
@@ -4107,13 +4121,13 @@ Iterator 的遍历过程是这样的。
 	//这是一个闭包写法，内部函数调用了外部函数的变量index，
 	//并且直接调用了内部函数next(通过return给外部函数)
     function myIterator(arr){
-    	let index = 0;//记录指针的位置
+        let index = 0;//记录指针的位置
         let len = arr.length;//长度 用来判断done
 	    return {
              next(){
-                // 三目表达式 如果index < len说明没有遍历完
-                return index < len ? {value: arr[index++], done: false} : 
-                {value: undefined, done: true}
+                    // 三目表达式 如果index < len说明没有遍历完
+                    return index < len ? {value: arr[index++], done: false} : 
+                    {value: undefined, done: true}
                   }
             }
     }
@@ -4127,10 +4141,11 @@ Iterator 的遍历过程是这样的。
     console.log(iteratorObj.next())
     /*
      {value: 1, done: false}
-		 {value: 4, done: false}
-		 {value: 65, done: false}
-		 {value: "abc", done: false}
-		 {value: undefined, done: true}*/
+     {value: 4, done: false}
+     {value: 65, done: false}
+     {value: "abc", done: false}
+     {value: undefined, done: true}
+     */
 }
 ```
 
@@ -4224,10 +4239,93 @@ Iterator 的遍历过程是这样的。
 }
 ```
 
+#### iterator应用实例
+
+以Symbol.iterator为key：可迭代协议
+返回next函数，next返回值done+value：迭代器协议
+
+```
+//获取所有作者名单
+let authors = {
+  allAuthors: {
+    fiction: ['Agla', 'Skks', 'LP'],
+    scienceFiction: ['Neal', 'Arthru', 'Ribert'],
+    fantasy: ['J.R.Tole', 'J.M.R', 'Terry P.K']
+  },
+  Addres: []
+}
+
+//这种方式缺点：当数据结构发生改变时，都要改变循环
+ let r = []
+ for (let [k, v] of Object.entries(authors.allAuthors)) {
+ 	//聚合
+     r = r.concat(v)
+ }
+ console.log(r)
+
+//改变方式，部署iterator接口，使其可以直接被for...of循环，不关心内部结构，更优雅
+authors[Symbol.iterator] () {
+  //this.allAuthors取到authors对象的allAuthors
+  let allAuthors = this.allAuthors
+  let keys = Reflect.ownKeys(allAuthors)
+  let values = []
+  return {
+    next () {
+      if (!values.length) {
+        if (keys.length) {
+          values = allAuthors[keys[0]]
+          //从首部弹出去 
+          keys.shift()
+        }
+      }
+      return {
+        done: !values.length
+        //返回第一个元素的值
+        value: values.shift()
+      }
+    }
+  }
+}
+let r = []
+for (let v of authors) {
+  r.push(v)
+}
+console.log(r)
+
+//generator实现 不再手动写迭代器协议
+authors[Symbol.iterator] = function * () {
+  //this.allAuthors取到authors对象的allAuthors
+  let allAuthors = this.allAuthors
+  let keys = Reflect.ownKeys(allAuthors)
+  let values = []
+  //无限循环 遇到yeild即取出一个值后就暂停
+  while(1){
+     if (!values.length) {
+        if (keys.length) {
+          values = allAuthors[keys[0]]
+          //从首部弹出去 
+          keys.shift()
+          yield values.shift()
+        }else{
+          return false
+        }
+     }else{
+     	 yield values.shift()
+     }
+  }
+}
+let r = []
+for (let v of authors) {
+  r.push(v)
+}
+console.log(r)
+```
+
 ### 十六.Generator
 
 #### Generator基本概念
 
+- 让遍历‘停下来’，而不是break/return这种退出
 - 异步编程的解决方案之一
 - Generator函数是一个状态机，内部封装了不同状态的数据
 - 用来生成遍历器对象
@@ -4238,11 +4336,12 @@ Iterator 的遍历过程是这样的。
 - function后紧跟*号
 - 内部用yield语句定义不同状态
 - generator返回的是指针对象，而不会执行函数内部逻辑
-- 调用next方法内部逻辑开始执行，遇到yield表达式停止，返回{value:yield表达式结果/undefined, done: true/false}
+- 调用next方法（会执行）内部逻辑开始执行，遇到yield表达式停止，函数返回当前数据和结果{value:yield表达式结果/undefined, done: true/false}
+- **Generator 函数的定义不能使用箭头函数，否则会触发 SyntaxError 错误**
 
 ```
 {
-    function* myGenerator(){
+    function * myGenerator(){
         let result = yield 'hello';
         console.log(result)//yield语句默认返回undefined
         yield 'generator';
@@ -4260,9 +4359,16 @@ Iterator 的遍历过程是这样的。
 
 #### Generator基本用法
 
+yeild没有返回值
+yeild后有无 * 的区别
+yeild后还可以是可遍历的对象或者generator对象（加不加*号），输出会有所不同
+在yield后可以写不同的ajax请求，异步请求，请求成功后，还可以手动请求next，执行后面的语句
+在函数内部，next调用后，value代表当前函数的值，done代表循环是否已经结束
+t通过next可以解决死循环
+
 ```
 {
-  // 基本定义
+  //基本语法解析
   let tell = function*() {
     yield "a";
     yield "b";
@@ -4271,6 +4377,7 @@ Iterator 的遍历过程是这样的。
   let k = tell();
   // 调用next()时 会去执行一个yield，保证了函数体内异步操作的过程
   console.log(k.next());
+  k.return(); //提前结束循环，就和for循环的return是一样的，return可以传值，传值影响返回的generator对象的value				值
   console.log(k.next());
   console.log(k.next());
   console.log(k.next());
@@ -4279,9 +4386,48 @@ Iterator 的遍历过程是这样的。
   // {value: "c", done: true}
   // {value: undefined, done: true}
 }
-```
+{
+	function * gen () { 
+		//yeild后可以是常量 也可以是数组
+		let val = yeild [1，2，3]
+		console.log(val)
+	}
+	let g = gen()
+	g.next(); //undefined  
+}
 
-- [x] 在yield后可以写不同的ajax请求，异步请求，请求成功后，还可以手动请求next，执行后面的语句
+{
+	function * gen () { 
+		//yeild后可以是常量 也可以是数组
+		let val = yeild [1，2，3]
+		console.log(val)
+	}
+	let g = gen()
+	
+	console.log(g.next(10)) //{value: [1,2,3], done: false}
+	console.log(g.next(20)) //undefined {value: undefined, done: true}
+	
+	//next方法可以传参
+	console.log(g.next(10)) //{value: [1,2,3], done: false}
+	console.log(g.next(20)) //20 {value: undefined, done: true}
+	//传参实际上是改变yeild返回值的方式，第一次没有涉及到赋值，第二次才赋上值
+}
+{
+	//提前结束除了return还可以用抛出异常
+	function * gen () {
+		while(true){
+			try{
+				yeild 1
+			}catch(e){
+				console.log(e.message)
+			}
+		}
+	}
+	let g = gen()
+	g.throw(new Error(ss))//捕获错误不会阻止程序的运行
+	console.log(g.next())
+}
+```
 
 #### generator 和 iterator 的关系
 
@@ -4338,25 +4484,70 @@ Generator 是实现状态机的最佳结构
 
 #### 应用实例（多写几遍）
 
-1.抽奖还剩几次
+1. 年会抽奖模拟 一等奖：一名 二等奖：三名 三等奖：五名 
 
 ```
 {
-	 //用generator具体逻辑和次数隔离开
-	let draw = function(count) {
-	    //具体抽奖逻辑
-	    console.info(`剩余${count}次`);
-	};
-	//计算次
-	let reduce = function*(count){
-		while(count>0){
-			count--;
-			//执行抽奖具体逻辑
-			yield draw(count);
-		}
-	}
-	//初始化一个数值 （在实际开发中这个数值一般由后端服务器端提供）
-	let star = reduce(5);
+	// ES5 实现方法
+    function draw(first = 1, second = 3, third = 5) {
+      let firstPrize = ['1A', '1B', '1C', '1D', '1E']
+      let secondPrize = ['2A', '2B', '2C', '2D', '2E', '2F', '2G', '2H', '2I']
+      let thirdPrize = ['3A', '3B', , '3C', '3D', '3E', '3F', '3G', '3H', '3I', '3K', '3J']
+      let result = []
+      let random
+      // 抽一等奖
+      for (let i = 0; i < first; i++) 
+      	//产生一个0到5的随机数
+        random = Math.floor(Math.random() * firstPrize.length)
+        //在组合的同时，要把抽奖删掉，避免重复 firstPrize.splice(random, 1)通过取索引
+        result = result.concat(firstPrize.splice(random, 1))
+      }
+      // 抽二等奖
+      for (let i = 0; i < second; i++) {
+        random = Math.floor(Math.random() * secondPrize.length)
+        result = result.concat(secondPrize.splice(random, 1))
+      }
+      // 抽三等奖
+      for (let i = 0; i < third; i++) {
+        random = Math.floor(Math.random() * thirdPrize.length)
+        result = result.concat(thirdPrize.splice(random, 1))
+      }
+      return result
+    }
+    let start = draw()
+    for (let value of start) {
+      console.log(value) //抽奖一次性抽完1、2、3等奖，不合理
+    }
+
+	//es6实现方式
+    function* draw(first = 1, second = 3, third = 5) {
+      let firstPrize = ['1A', '1B', '1C', '1D', '1E']
+      let secondPrize = ['2A', '2B', , '2C', '2D', '2E', '2F', '2G', '2H', '2I']
+      let thirdPrize = ['3A', '3B', , '3C', '3D', '3E', '3F', '3G', '3H', '3I', '3K', '3J']
+      let count = 0
+      let random
+      while (1) {
+        if (count < first) { // 抽一等奖
+          random = Math.floor(Math.random() * firstPrize.length)
+          yield firstPrize[random]
+          count++ // 抽一次计数器+1
+          //firstPrize.splice(random, 1)
+          //一等奖只有1个不需要删除
+        } else if (count < first + second) { // 抽二等奖 判断二等奖有没有抽完
+          random = Math.floor(Math.random() * secondPrize.length)
+          yield secondPrize[random]
+          count++ // 抽一次计数器+1
+          secondPrize.splice(random, 1)//同时抽一次删除一次
+        } else if (count < first + second + third) {
+          random = Math.floor(Math.random() * thirdPrize.length)
+          yield thirdPrize[random]
+          count++ // 抽一次计数器+1
+          thirdPrize.splice(random, 1)
+        } else { // 如果三个奖项都抽完
+          return false
+        }
+      }
+
 	//新建一个抽奖元素
 	let btn = document.createElement("button");
 	btn.id = 'start';
@@ -4366,7 +4557,8 @@ Generator 是实现状态机的最佳结构
   	//注册事件
   	document.getElementById('start').addEventListener('click',function(){
   		//执行
-  		star.next();
+  		start.next();
+  		//console.log(start.next().value)
   	},false)
 }
 ```
@@ -4451,17 +4643,18 @@ SX.next();
 }
 ```
 
-### 十七. async/await(ES7草案、ES8)
+### 十七. async/await(ES8)
 
 真正意义上去解决异步回调的问题，同步流程表达异步操作！！
 
 特点：
 
+-  函数加了async后，返回的对象是promise对象，实例 instanceof Promise
 -  有async才能使用await，使用async/await需要用babel-polyfill编译
-
 - 不需要像Generator去调用next，遇到await等待，当前异步操作完成就往下执行
 - 返回的是Promise，但不像.then方法进行下一步操作
 - async取代Generator函数的*，await取代Generator的yield
+- await后必须是promise对象，就算是数字，也会转换成promise.resolve对象
 
 #### 基本使用
 
@@ -4765,8 +4958,9 @@ core-decorators
 
 - 模块化编译es6语法，可用webpack和rollup
 - 引入import
-
 - 导出export
+- 对象的导出 解构赋值，不能在导出的语句同时解构，需要在外面解构
+- 被导出的模块在本模块也能使用
 
 
 方法一:不推荐
@@ -4791,7 +4985,7 @@ import {A,test,Hello} from './19module.js'
 console.log(A,test,Hello)
 //全部引入
 import * as OtherName from "./class/lesson17";
-console。log(OtherName.A)
+console.log(OtherName.A)
 ```
 
 方法二：推荐
@@ -4817,13 +5011,30 @@ export default {
 //方法二引入
 import module from './19module.js'
 console.log(module.A)
+//或者
+import * as module from './19module.js'
+console.log(module.A)
+//对于有default的导出对象/类/函数/变量
+module.default
+
+
+//默认导出一个类
+export default ClassXX
+//或者
+export default class {
+}
+import Test/ClassXX from 'xx'
+//没有默认值
+export class ClassXX{
+}
+import {ClassXX} from 'xx'
 ```
 
 #### export default 和 export 区别
 
 - 在一个文件或模块中，export、import可以有多个，export default仅有一个
 
-  (1) 输出单个值，使用export default
+  (1) 输出单个值，使用export default，并且名字可以自己改变（导出导入不同）
   (2) 输出多个值，使用export 【注意：引入时要加花括号 import { A } from " B" 】解构引入
   (3) export default与普通的export不要同时使用
 
@@ -5021,7 +5232,7 @@ for...in循环枚举的时候，对象是枚举的key（属性名），数组枚
 }
 ```
 
-### ES7方法
+### ES7扩展
 
 #### 指/幂数运算符
 
@@ -5029,13 +5240,61 @@ for...in循环枚举的时候，对象是枚举的key（属性名），数组枚
 
 ```
 {
+	//es5
+    console.log(Math.pow(3,3));//27
+    //es7简写
     console.log(3 ** 3);//27
 }
 ```
 
 #### Array.prototype.includes(value)
 
-详见数组扩展
+[详见数组扩展](#includes)
+
+### es9扩展
+
+#### for await of
+
+异步遍历
+
+```
+   function gen(time) {
+        return new Promise(resolve => {
+         	setTimeout(resolve(time), 5000)
+        })
+    }
+    
+    function test () {
+    	let arr = [gen(2000),gen(100),gen(3000)]
+    	for(let item of arr){
+    		//console.log直接输出resolve的值
+    		console.log(Date.now(),item.then(console.log))
+    	}
+    }
+    /*
+    	时间戳 Promise {<pending>}
+        时间戳 Promise {<pending>}
+        时间戳 Promise {<pending>}
+        2000
+        100
+        3000
+    */
+    
+      async function test () {
+    	let arr = [gen(2000),gen(100),gen(3000)]
+    	for(let item of arr){
+    		console.log(Date.now(),await item.then(console.log))
+    	}
+      }
+      /*
+        2000
+        时间戳 undefined
+        100
+        时间戳 undefined
+        3000
+        时间戳 undefined
+      */
+```
 
 ### es11扩展
 
