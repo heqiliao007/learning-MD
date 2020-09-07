@@ -673,8 +673,6 @@ re.flags // 's'
 
 ### 五.字符串扩展
 
-![](C:\Users\Administrator\Pictures\es6\7.JPG)
-
 #### unicode表示法：大括号
 
 ```
@@ -1318,9 +1316,10 @@ let find = array.filter(function(){
 }
 ```
 
-#### flat
+#### flat（es10）
 
-数组的成员有时还是数组，`Array.prototype.flat()`用于将嵌套的数组“拉平”，变成一维的数组。该方法返回一个新数组，对原数据没有影响。 
+数组的成员有时还是数组，`Array.prototype.flat()`用于将嵌套的数组“拉平”，变成一维的数组。该方法返回一个新数组，对原数据没有影响。 flat() 方法会按照一个可指定的深度递归遍历数组。 可指定的深度默认为1。
+
 
 ```
 {
@@ -1340,13 +1339,12 @@ let find = array.filter(function(){
 }
 ```
 
-#### flatMap
+#### flatMap（es10）
 
-`flatMap()`方法对原数组的每个成员执行一个函数（相当于执行`Array.prototype.map()`），然后对返回值组成的数组执行`flat()`方法 ，不改变原数组 
-
-`flatMap()`只能展开一层数组 
+flatMap()`方法对原数组的每个成员执行一个函数（相当于执行`Array.prototype.map()`），然后对返回值组成的数组执行`flat()方法 ，不改变原数组 
 
 ```
+// `flatMap()`只能展开一层数组 
 // 相当于 [[[2]], [[4]], [[6]], [[8]]].flat()
 [1, 2, 3, 4].flatMap(x => [[x * 2]])
 // [[2], [4], [6], [8]]
@@ -4643,171 +4641,7 @@ SX.next();
 }
 ```
 
-### 十七. async/await(ES8)
-
-真正意义上去解决异步回调的问题，同步流程表达异步操作！！
-
-特点：
-
--  函数加了async后，返回的对象是promise对象，实例 instanceof Promise
--  有async才能使用await，使用async/await需要用babel-polyfill编译
-- 不需要像Generator去调用next，遇到await等待，当前异步操作完成就往下执行
-- 返回的是Promise，但不像.then方法进行下一步操作
-- async取代Generator函数的*，await取代Generator的yield
-- await后必须是promise对象，就算是数字，也会转换成promise.resolve对象
-
-#### 基本使用
-
-```
-{
-	async function foo() {
-        return new Promise(resolve => {
-         	/*setTimeout(function () {
-                resolve();
-         	},2000)*/
-         	//另一种写法
-         	setTimeout(resolve, 5000)
-        })
-    }
-    async function test(){
-        console.log('111',new Date().toTimeString());
-        await foo();
-        console.log('222',new Date().toTimeString());
-    }
-    test();
-    //说明等待后继续执行了后面的程序，如何看出来有等待？时间间隔了5秒
-    /*
-     * 111 17:53:40
-     * 222 17:53:45
-     */
-}
-
-{
-    //await的返回值
-	async function asyncPrint(){
-		//Promise作为对象，可以直接调用resolve(),表示成功的状态
-		let result = await Promise.resolve();
-		let result1 = await Promise.resolve('success');
-		let result2 = await Promise.reject();
-		let result3 = await Promise.reject('fail');
-		
-		console.log(result)//默认值为undefined
-		console.log(result1)//success 如果有传入参数则为传入参数的值
-		console.log(result2)//16asyncAndAwait.js:1 Uncaught (in promise) undefined
-		console.log(result3)//16asyncAndAwait.js:1 Uncaught (in promise) fail
-	}
-	asyncPrint();
-}
-```
-
-```
-{
-	 function loading(src){
-        return new Promise((resolve,reject)=>{
-        	//首先创建一个img标签
-        	let img = document.createElement("img");
-            //监听图片加载完成
-            img.onload = function(){
-            	resolve(img);
-            }
-            //onerror 事件在加载外部文件（文档或图像）发生错误时触发
-            img.onerror = function(err){
-            	reject(err)
-            }
-            img.src = src
-         })
-       }
-
-        var src1 = 'xxx.jpg';
-        var src2 = 'xxx.jpg';
-        
-        //new Promise写法那么需要用.then方法继续调后续操作
-        var result1 = loading(src1);
-        var result2 = loading(src2);
-        result1.then((img) => {
-        	console.log(1,img.width);
-        	return result2 
-        }.then((img) => {
-        	console.log(2,img.height);
-        }).catch((error) => {
-        	console.log(3,error);
-        })
-        
-        //async/await方式
-        const load = async function (){
-            const result1 = await loading(src1)
-            console.log(result1)
-            const result2 = await loading(src2)
-            console.log(result2)
-        }
-        load();
-}
-```
-
-#### 实例改写
-
-```
-1.不用改写，因为它是点击一次需要暂停的而await是继续执行后续代码
-2.长轮询
-{
-	//状态值服务器端定期变化，前端不断获取
-	let ajax = async function (){
-		//generator和promise的结合
-		return new Promise(function(resolve,reject){
-			//实际开发中这段拿来写实际接口
-			setTimeout(function () {
-//				let code = 500;
-				let code = 0;
-				resolve(code)
-			},200)
-		})
-	}
-	//轮询
-	let pull = async function (){
-		let result = await ajax();
-		if(result!=0){
-			setTimeout(function(){
-				console.info('wait');
-				pull();
-			},1000)
-		}else{
-			console.info(result);
-		}
-	}
-	pull();
-}
-3.新闻+内容封装ajax
-{
-    async function getNews(url){
-    	return new Promise((resolve,reject) => {
-             $.ajax({
-                methods: 'GET',
-                url,//url:url es6同名属性缩写
-                /*success：function(data){
-					resolve();
-                },*/
-                //箭头函数写法 函数体一行代码省略花括号
-                //传参后自动作为await的返回值
-                success: data => resolve(data),
-                //!注意如果需要报错，最好不要直接调用reject，因为一旦调用报错就不执行后续内容
-                //error: error => reject()
-                error: error => resolve(false)
-            })
-    	})
-    }
-    async function sendXml(){
-        let result = await getNews('xxxurl?id=xx');
-        console.log(result)//data
-        //如果请求有问题给出用户提示
-        if(!result){alert('暂时没有新闻！！！');return;}
-        let url = 'xxx' + data.commentsUrl;
-        await getNews(url);
-    }
-    sendXml();
-}
-```
-
-### 十八.Decorator 修饰器
+### 十七.Decorator 修饰器
 
 一个用来修改类的行为的**函数**，可以理解为扩展类的功能(只在类的范畴中有用)
 
@@ -4954,7 +4788,7 @@ core-decorators
 }
 ```
 
-### 十九.Module模块化
+### 十八Module模块化
 
 - 模块化编译es6语法，可用webpack和rollup
 - 引入import
@@ -5251,6 +5085,213 @@ for...in循环枚举的时候，对象是枚举的key（属性名），数组枚
 
 [详见数组扩展](#includes)
 
+### es8扩展
+
+####  Async/Await 
+
+真正意义上去解决异步回调的问题，同步流程表达异步操作！！
+
+特点：
+
+-  函数加了async后，返回的对象是promise对象，实例 instanceof Promise
+-  有async才能使用await，使用async/await需要用babel-polyfill编译
+-  不需要像Generator去调用next，遇到await等待，当前异步操作完成就往下执行
+-  返回的是Promise，但不像.then方法进行下一步操作
+-  async取代Generator函数的*，await取代Generator的yield
+-  await后必须是promise对象，就算是数字，也会转换成promise.resolve对象
+
+##### 基本使用
+
+```
+{
+	async function foo() {
+        return new Promise(resolve => {
+         	/*setTimeout(function () {
+                resolve();
+         	},2000)*/
+         	//另一种写法
+         	setTimeout(resolve, 5000)
+        })
+    }
+    async function test(){
+        console.log('111',new Date().toTimeString());
+        await foo();
+        console.log('222',new Date().toTimeString());
+    }
+    test();
+    //说明等待后继续执行了后面的程序，如何看出来有等待？时间间隔了5秒
+    /*
+     * 111 17:53:40
+     * 222 17:53:45
+     */
+}
+
+{
+    //await的返回值
+	async function asyncPrint(){
+		//Promise作为对象，可以直接调用resolve(),表示成功的状态
+		let result = await Promise.resolve();
+		let result1 = await Promise.resolve('success');
+		let result2 = await Promise.reject();
+		let result3 = await Promise.reject('fail');
+		
+		console.log(result)//默认值为undefined
+		console.log(result1)//success 如果有传入参数则为传入参数的值
+		console.log(result2)//16asyncAndAwait.js:1 Uncaught (in promise) undefined
+		console.log(result3)//16asyncAndAwait.js:1 Uncaught (in promise) fail
+	}
+	asyncPrint();
+}
+```
+
+```
+{
+	 function loading(src){
+        return new Promise((resolve,reject)=>{
+        	//首先创建一个img标签
+        	let img = document.createElement("img");
+            //监听图片加载完成
+            img.onload = function(){
+            	resolve(img);
+            }
+            //onerror 事件在加载外部文件（文档或图像）发生错误时触发
+            img.onerror = function(err){
+            	reject(err)
+            }
+            img.src = src
+         })
+       }
+
+        var src1 = 'xxx.jpg';
+        var src2 = 'xxx.jpg';
+        
+        //new Promise写法那么需要用.then方法继续调后续操作
+        var result1 = loading(src1);
+        var result2 = loading(src2);
+        result1.then((img) => {
+        	console.log(1,img.width);
+        	return result2 
+        }.then((img) => {
+        	console.log(2,img.height);
+        }).catch((error) => {
+        	console.log(3,error);
+        })
+        
+        //async/await方式
+        const load = async function (){
+            const result1 = await loading(src1)
+            console.log(result1)
+            const result2 = await loading(src2)
+            console.log(result2)
+        }
+        load();
+}
+```
+
+##### 实例改写
+
+```
+1.不用改写，因为它是点击一次需要暂停的而await是继续执行后续代码
+2.长轮询
+{
+	//状态值服务器端定期变化，前端不断获取
+	let ajax = async function (){
+		//generator和promise的结合
+		return new Promise(function(resolve,reject){
+			//实际开发中这段拿来写实际接口
+			setTimeout(function () {
+//				let code = 500;
+				let code = 0;
+				resolve(code)
+			},200)
+		})
+	}
+	//轮询
+	let pull = async function (){
+		let result = await ajax();
+		if(result!=0){
+			setTimeout(function(){
+				console.info('wait');
+				pull();
+			},1000)
+		}else{
+			console.info(result);
+		}
+	}
+	pull();
+}
+3.新闻+内容封装ajax
+{
+    async function getNews(url){
+    	return new Promise((resolve,reject) => {
+             $.ajax({
+                methods: 'GET',
+                url,//url:url es6同名属性缩写
+                /*success：function(data){
+					resolve();
+                },*/
+                //箭头函数写法 函数体一行代码省略花括号
+                //传参后自动作为await的返回值
+                success: data => resolve(data),
+                //!注意如果需要报错，最好不要直接调用reject，因为一旦调用报错就不执行后续内容
+                //error: error => reject()
+                error: error => resolve(false)
+            })
+    	})
+    }
+    async function sendXml(){
+        let result = await getNews('xxxurl?id=xx');
+        console.log(result)//data
+        //如果请求有问题给出用户提示
+        if(!result){alert('暂时没有新闻！！！');return;}
+        let url = 'xxx' + data.commentsUrl;
+        await getNews(url);
+    }
+    sendXml();
+}
+```
+
+#### String padding
+
+详见字符串扩展
+
+####  Object.keys/Object.values/Object.entries
+
+详见对象扩展
+
+#### **Object.getOwnPropertyDescriptors** 
+
+ 如何获取Object数据的描述符(descriptor) 
+ defineProperty 的第三个参数就是描述符(descriptor)。这个描述符包括几个属性：
+
+- value [属性的值]
+- writable [属性的值是否可被改变/只读]
+- enumerable [属性的值是否可被枚举]
+- configurable [描述符属性是否可被删除]
+
+```
+//例如前端做状态报才去操作数据
+//名单
+const data = {
+  Portland: '78/50',
+  Dublin: '88/52',
+  Lima: '58/40'
+}
+//需求：上边的代码把所有的 key、value 遍历出来，如果我们不想让这份名单有 Lima 或者说这个属性和值被枚举
+Object.defineProperty(data, 'Lima', {
+  enumerable: false,
+  writable: false
+})
+Object.entries(data).map(([name, feature]) => {
+  console.log(`Name: ${name.padEnd(16)} Feature: ${feature}`)
+  // Name: Portland         Feature: 78/50
+  // Name: Dublin           Feature: 88/52
+})
+
+Object.getOwnPropertyDescriptors(data);//输出所有数据，并得到各个属性值（只读/被枚举/被修改等等）
+Object.getOwnPropertyDescriptor(data,'lima');//只拿某一项，查看其深层信息属性值
+```
+
 ### es9扩展
 
 #### for await of
@@ -5260,7 +5301,7 @@ for...in循环枚举的时候，对象是枚举的key（属性名），数组枚
 ```
    function gen(time) {
         return new Promise(resolve => {
-         	setTimeout(resolve(time), 5000)
+         	setTimeout(resolve(time), time)
         })
     }
     
@@ -5272,11 +5313,11 @@ for...in循环枚举的时候，对象是枚举的key（属性名），数组枚
     	}
     }
     /*
-    	时间戳 Promise {<pending>}
         时间戳 Promise {<pending>}
         时间戳 Promise {<pending>}
-        2000
+        时间戳 Promise {<pending>}
         100
+        2000
         3000
     */
     
@@ -5294,7 +5335,294 @@ for...in循环枚举的时候，对象是枚举的key（属性名），数组枚
         3000
         时间戳 undefined
       */
+      
+      //用 for…await…of 真正实现
+      async function test () {
+    	let arr = [gen(2000),gen(100),gen(3000)]
+    	for await(let item of arr){
+    		console.log(Date.now(), item)
+    	}
+      }
+      /*
+      	时间戳 2000
+        时间戳 100
+        时间戳 3000
+      */
 ```
+
+自定义数据结构异步遍历
+
+```
+//自定义数据结构异步遍历
+const obj = {
+	count: 0,
+	Gen(time){
+		 return new Promise((resolve,reject) => {
+         	setTimeout({
+         		resolve({value: time, done: false})
+         	},time)
+        })
+	},
+	[Symbol.asyncIterator] () {
+		let self = this;
+		 return {
+             next () {
+             	self.count++;
+             	if(self.count < 4){
+             		return self.Gen(Math.random() * 1000)
+             	}else{
+             		return Promise.resolve({
+             			done: true,
+             			value: ''
+             		})
+             	}
+             }
+          }
+	}
+}
+for await(let item of obj){
+	console.log(Date.now(), item)
+}
+```
+
+####  Promise.finally
+
+promise兜底操作： 执行完promise后，无论结果是fulfilled还是rejected都需要执行的代码提供了一种方式，避免同样的语句需要在then()和catch()中各写一次的情况 
+
+```
+//数据库最后要关闭
+let connection;
+db.open()
+.then(conn => {
+    connection = conn;
+    return connection.select({ name: 'Jane' });
+})
+.then(result => {
+    // Process result
+    // Use `connection` to make more queries
+})
+···
+.catch(error => {
+    // handle errors
+})
+.finally(() => {
+    connection.close();
+});
+```
+
+#### Object.rest.spread
+
+剩余、扩展运算符在对象的运算，代替浅拷贝、深拷贝
+
+```
+const input = {
+  a: 1,
+  b: 2
+}
+
+const output = {
+  ...input,
+  c: 3
+}
+
+console.log(input,output) // {a: 1, b: 2} {a: 1, b: 2, c: 3}  
+input.a = 4;
+//相当于浅拷贝
+console.log(input,output) // {a: 4, b: 2} {a: 1, b: 2, c: 3}
+```
+
+#### RegExp-dotAll
+
+/s 匹配任何空白字符,包括空格、制表符、换页符等等
+
+```
+//.不能匹配四个字节的utf16字符和行终止符\n,\r
+console.log(/foo.bar/.test('foo\nbar')) //false
+
+//dotAll
+console.log(/foo.bar/s.test('foo\nbar')) 
+//全能，四个字节的utf16字符和行终止符\n都能匹配
+console.log(/foo.bar/us.test('foo\nbar')) //true
+
+//如何判断正则是否启用了dotAll模式
+const re = /foo.bar/s 
+console.log(re.dotAll) //true  加了s修饰符
+console.log(re.flags)  //s
+```
+
+#### RegExp-命名分组捕获
+
+```
+const t =' 2020-01-23'.match(/(\d{4})-(\d{2})-(\d{2})/)
+console.log(t) //["2020-01-23", "2020", "01", "23", index: 0, input: "2020-01-23", groups: undefined]
+//根据index取值
+console.log(t[1]) //2020
+console.log(t[2]) //01
+
+//?<命名name>
+const t = '2020-01-23'.match(/(?<year>\d{4})-(?<month>\d{2})-(?<day>\d{2})/)
+console.log(t.groups.year) //2020
+console.log(t.groups.month) //01
+console.log(t.groups.day) //23
+```
+
+#### RegExp-后行断言
+
+```
+//先行断言：先遇到一个条件，判断后面的条件是否满足
+let test = 'hello world'
+console.log(test.match(/hello(?=\sworld)/))
+
+//后行断言
+//判断world的前面是不是hello
+console.log(test.match(/(?<=hello\s)world/))
+//匹配world前面不是hello的
+//?<  采用后行断言
+console.log(test.match(/(?<!hells\s)world/))
+
+//练习1 把“$foo %foo foo”前面为$的foo替换成bar
+let test = "$foo %foo foo";
+test = test.replace(/(?<=\$)foo/,'bar')
+
+//练习2 提取“$1 is worth about ￥123”字符中美元的数字
+let test1 = "$3 is worth about ￥123"
+let res = /(?<=\$)(?<money>\d)/.exec(test1)
+console.log(res.groups.money)
+```
+
+### es10扩展
+
+#### JSON.stringify
+
+JSON.stringify 在 ES10 修复了对于一些超出范围的 Unicode 展示错误的问题。因为 JSON 都是被编码成 UTF-8，所以遇到 0xD800–0xDFFF 之内的字符会因为无法编码成 UTF-8 进而导致显示错误。在 ES10 它会用转义字符的方式来处理这部分字符而非编码的方式，这样就会正常显示了 
+
+```
+/*
+    /u 表示按unicode(utf-8)匹配（主要针对多字节比如汉字）
+    /i 表示不区分大小写（如果表达式里面有 a， 那么 A 也是匹配对象）
+*/
+JSON.stringify('\u{D800}') // "\ud800"
+```
+
+####  flat和flatmap 
+
+详见数组拓展
+
+#### trimStart/trimEnd
+
+```
+//去除首 或者 尾的空白字符串
+let str = "  foo   "
+console.log(str.trimStart().trimEnd())
+//trimLeft = trimStart  trimRight = trimEnd
+//trim = trimStart+trimEnd
+```
+
+####  **matchAll** 
+
+```
+//需求：提取单词 `"foo" and "bar" and "baz"`
+
+//回顾下 ES10 之前一共有多少种正则全部遍历的方法
+//1. RegExp.prototype.exec
+function collectGroup1 (regExp, str) {
+  const matches = []
+  while (true) {
+    const match = regExp.exec(str)
+    if (match === null) break
+    // Add capture of group 1 to `matches`
+    matches.push(match[1])
+  }
+  return matches
+}
+//加g后会从匹配后的下一个位置继续找，正则表达式 []表示捕获 捕获不是双引号
+collectGroup1(/"([^"]*)"/g, `"foo" and "bar" and "baz"`)
+// [ 'foo', 'bar', 'baz' ]
+
+//2. String.prototype.match
+//如果用 .match 方法结合 /g 的正则模式，将会把所有的匹配打包成一个数组返回，换句话说所有的捕获被忽略
+let str = `"foo" and "bar" and "baz"`;
+str.match(/"([^"]*)"/g)
+[ '"foo"', '"bar"', '"baz"' ]
+//如果没有使用 /g 的正则模式，.match 的效果和 RegExp.prototype.exec() 是一致的
+
+//3.String.prototype.replace
+function collectGroup1 (regExp, str) {
+  const matches = []
+  function replacementFunc (all, first) {
+    matches.push(first)
+  }
+  //replace第二个参数可传函数
+  str.replace(regExp, replacementFunc)
+  return matches
+}
+
+collectGroup1(/"([^"]*)"/ug, `"foo" and "bar" and "baz"`)
+// ["foo", "bar", "baz"]
+
+//4.matchAll 方法
+function collectGroup1 (regExp, str) {
+  let results = []
+  for (const match of str.matchAll(regExp)) {
+    results.push(match[1])
+  }
+  return results
+}
+collectGroup1(/"([^"]*)"/g, `"foo" and "bar" and "baz"`)
+// ["foo", "bar", "baz"]
+```
+
+####  fromEntries 
+
+ 把数组转化为对象 
+
+```
+const arr = [["foo", 1], ["bar", 2]]
+const obj = Object.fromEntries(arr)
+console.log(obj) //{foo: 1, bar: 2}
+
+// 筛选出obj中key的长度为3的项
+const obj = {
+    "abc": 1,
+    "def": 2,
+    "ghsjk": 3
+}
+//最后用fromEntries把数组还原成对象
+let res = Object.fromEntries(
+	//[key, val]解构赋值
+    Object.entries(obj).filter(([key, val]) => key.length == 3)
+    /*
+    Object.entries(返回一个给定对象自身可枚举属性的键值对数组
+    console.log(Object.entries(obj));  // [['abc', '1'], ['def', '2'], ['ghsjk', '3']]
+    */
+)
+console.log(res)
+/*{
+    "abc": 1,
+    "def": 2,
+}*/
+```
+
+####  try...catch ..的增强
+
+```
+//es10允许catch后不带参数e
+try {
+         
+} catch {
+
+}
+```
+
+####  BigInt类型 
+
+```
+//用于处理2的53次方以上的数据类型---长数据
+//加一个n
+console.log(typeof 11n)
+```
+
+
 
 ### es11扩展
 
@@ -5325,7 +5653,7 @@ const arr=[1,2,3]
 //  es5
 if(arr.length){
 	arr.map(res=>{
-		//处理你的罗晋
+		//处理你的逻辑
 	})
 }
 // 可选链
