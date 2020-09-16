@@ -341,21 +341,22 @@ align-items: stretch;
 
 
 经常用到的flex布局
-{
 
-	display: flex;
-	
-	flex-direction: column;
-	
-	align-items: center;
-	
-	justify-content: center
-	
 	{
-   		flex:1   //所有的子元素平均分配
- 	}
-
-}
+	    display: flex;
+	
+	    flex-direction: column;
+	
+	    align-items: center;
+	
+	    justify-content: center
+	
+		{
+			flex:1   //所有的子元素平均分配
+	 	}
+	
+	}
+   
 
 #### 关于路由 router 
 
@@ -365,7 +366,7 @@ align-items: stretch;
 
 keep-alive 
 
- router-link（跳转）  相当于a标签
+router-link（跳转）  相当于a标签
 
 router-view（显示，这个可以为单标签）视图渲染
 
@@ -378,8 +379,6 @@ router-view（显示，这个可以为单标签）视图渲染
 - 如果是路由视图，就有父子路由，页面的区分比如主页就这样靠路由区分
 
 ##### 动态路由匹配
-
-
 
 #### tab组件
 
@@ -545,13 +544,9 @@ mounted:在模板渲染成html后调用，通常是初始化页面完成后，�
 
 ![](.\vue-img\20.JPG)
 
-![](C:\Users\Administrator\Pictures\vue\21.JPG)
+![](.\vue-img\21.JPG)
 
 ##### 封装接口请求函数里获取接口方法
-
-!
-
-
 
 dispatch=》commit
 
@@ -626,7 +621,3 @@ git push origin master提交代码至线上
 	git reset --soft HEAD^ //撤销本次提交，将本地仓库回滚到上一个版本，工作区和暂存区不变。
 	HEAD^表示上个提交版本，HEAD^^表示上上个提交版本，HEAD~n代表前面第n个版本
 gitbash 不能复制粘贴的使用快捷键 Ctrl/Shift+Insert 
-
-## 补充
-
-<https://www.cnblogs.com/jlliu/p/11165741.html> 

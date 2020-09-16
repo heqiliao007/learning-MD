@@ -3162,7 +3162,7 @@ let vm = {
     name: 'zhangsan',
     age: 18
 };
-//获取key
+//获取key 数组
 let keys = Object.keys(vm);
 keys.forEach(key => {
     let value = vm[key];
@@ -3286,6 +3286,10 @@ console.log(Reflect.get(obj,'x'))//1
 //读取数组更方便
 console.log(Reflect.get([3,4],1))//3  读取第一个
 ```
+
+##### Reflect.ownKeys
+
+返回所有keys
 
 #### 开发中的实例
 
@@ -4262,10 +4266,21 @@ let authors = {
  console.log(r)
 
 //改变方式，部署iterator接口，使其可以直接被for...of循环，不关心内部结构，更优雅
+const author = new Proxy(allAuthors,{
+	has(target,key){
+	  const keys = Reflect.ownKeys(target).slice(0,-2)
+	  //console.log(keys) fiction、scienceFiction、fantasy
+	  for(const item of keys){
+	  	if(target[item].includes(key)){
+	  		return true
+	  	}
+	  }
+	}
+})	
 authors[Symbol.iterator] () {
   //this.allAuthors取到authors对象的allAuthors
   let allAuthors = this.allAuthors
-  let keys = Reflect.ownKeys(allAuthors)
+  let keys = Reflect.ownKeys(allAuthors).slice(0,-2)
   let values = []
   return {
     next () {
@@ -4284,6 +4299,8 @@ authors[Symbol.iterator] () {
     }
   }
 }
+
+
 let r = []
 for (let v of authors) {
   r.push(v)
@@ -4294,7 +4311,7 @@ console.log(r)
 authors[Symbol.iterator] = function * () {
   //this.allAuthors取到authors对象的allAuthors
   let allAuthors = this.allAuthors
-  let keys = Reflect.ownKeys(allAuthors)
+  let keys = Reflect.ownKeys(allAuthors).slice(0,2)
   let values = []
   //无限循环 遇到yeild即取出一个值后就暂停
   while(1){
@@ -4312,6 +4329,8 @@ authors[Symbol.iterator] = function * () {
      }
   }
 }
+this.authors = authors
+
 let r = []
 for (let v of authors) {
   r.push(v)
@@ -5572,9 +5591,7 @@ collectGroup1(/"([^"]*)"/g, `"foo" and "bar" and "baz"`)
 // ["foo", "bar", "baz"]
 ```
 
-####  fromEntries 
-
- 把数组转化为对象 
+####  fromEntries (把数组转化为对象 )
 
 ```
 const arr = [["foo", 1], ["bar", 2]]

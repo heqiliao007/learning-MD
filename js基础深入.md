@@ -2385,6 +2385,9 @@ Cache-Control
 Last-Modified
 Etag
 If-None-Match
+
+这几个缓存的优先级如下：
+cache-control > expires > etag > last-modified
 ```
 
 ### 错误监控
