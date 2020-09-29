@@ -825,11 +825,14 @@ typeof无法判断 数组 返回为object
 
 - 待同步函数执行完毕，轮询执行异步队列的函数
 
-- **js在执行宏任务前先会把微任务执行完清空,执行完一个宏任务去清空一次微任务** 
+   https://segmentfault.com/a/1190000021445387?utm_source=sf-related 
+
+- js在执行宏任务前先会把微任务执行完清空,(微任务优先级更高) 
 
   - 宏任务:代码块，setTimeout，setInterval等,宏任务是放到事件触发队列里面的
-
-  - 微任务:Promise，process.nextTick等,是放到微任务队列里面的
+- 微任务:Promise，process.nextTick等,是放到微任务队列里面的
+  
+     https://segmentfault.com/a/1190000019415672 
 
 ```
 {
