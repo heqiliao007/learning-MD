@@ -3993,6 +3993,8 @@ Promise.all([
 ]).then((value)=>{
 	console.log(value); //1 2 3
 })
+
+
 ```
 
 ###### **使用场景**
