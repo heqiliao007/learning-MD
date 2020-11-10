@@ -1172,7 +1172,7 @@ function ArrayOf(){
 
 {
 	//当new一个字符串的时候，生成的是该字符串为元素的数组
-	const a = new Array(2) //长度、undefined
+    const a = new Array(2) //长度、undefined
     const b = new Array("2") //值 但是是字符串
     console.log(a, b) //[undefined, undefined] ["2"]
     
