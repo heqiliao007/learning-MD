@@ -2983,6 +2983,8 @@ for(let [key] of Object.entries(o)){
 
 ```
 {
+const n = 1.0000
+let a = typeof(n.toFixed(2))
 	//验证数据：比如格式等
 	//拦截无效数据
 	//数据结构不被破坏
