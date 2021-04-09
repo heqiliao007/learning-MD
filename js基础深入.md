@@ -2366,9 +2366,11 @@ Cache-Control      Cahe-Control : Max-age=3600 //浏览器的相对时间 单位
 
 和服务器协商这个文件能不能用，过期没有
 
+![1616407211845](..\learning-MD\img\huancun.png)
+
 ```
-Last-Modified If-Modified-Since   Last-Modified:Wed,26 Jan 2017 00:35:11 GMT
-Etag   If-None-Match  
+Last-Modified / If-Modified-Since  http1.0  Last-Modified:Wed,26 Jan 2017 00:35:11 GMT
+Etag / If-None-Match  http1.1
 /*
 Last-Modified 请求资源的最后修改时间 (服务器下发的上次修改的时间)
 If-Modified-Since浏览器端缓存页面的最后修改时间一起发到服务器去，服务器会把这个时间与服务器上实际文件的最后修改时间进行比较 与Last-Modified同一个value值
@@ -2390,7 +2392,7 @@ Etag
 If-None-Match
 
 这几个缓存的优先级如下：
-cache-control > expires > etag > last-modified
+cache-control > expires > Etag > last-modified
 ```
 
 ### 错误监控
