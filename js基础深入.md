@@ -830,9 +830,9 @@ typeof无法判断 数组 返回为object
 - js在执行宏任务前先会把微任务执行完清空,(微任务优先级更高) 
 
   - 宏任务:代码块，setTimeout，setInterval等,宏任务是放到事件触发队列里面的
-- 微任务:Promise，process.nextTick等,是放到微任务队列里面的
+  - 微任务:Promise，process.nextTick等,是放到微任务队列里面的
   
-     https://segmentfault.com/a/1190000019415672 
+  https://segmentfault.com/a/1190000019415672 
 
 ```
 {
@@ -2438,14 +2438,35 @@ cache-control > expires > Etag > last-modified
    // GETxxx ERROR    
 ```
 
-#### **延伸：跨域JS运行错误可以捕获吗，错误提示是什么，应该怎么处理？** 
+3.promise错误
+
+```
+// 监听 promise 错误 缺点是获取不到行数数据
+            addEventListener('unhandledrejection', e => {
+                monitor.errors.push({
+                    type: 'promise',
+                    msg: (e.reason && e.reason.msg) || e.reason || '',
+                    // 错误发生的时间
+                    time: new Date().getTime(),
+                })
+
+                console.log('所有的错误信息')
+                console.log(monitor.errors)
+            })
+
+            return monitor
+        }
+```
+
+
+
+#### 延伸：跨域JS运行错误可以捕获吗，错误提示是什么，应该怎么处理？** 
 
 因为跨域没有权限，只能捕获到这个错误，但是没拿到相应的具体信息
 ![](.\img\9.JPG)
 
  **需要这样处理之后就可以拿到详细信息：**
  1.在script标签增加crossorigin属性（在客户端做的）
-
  2.设置JS资源响应头Access-control-Allow-origin；*（在服务端做的）
  在响应JS资源的http头上加一个Access-control-Allow-origin，也可以是指定域名
 

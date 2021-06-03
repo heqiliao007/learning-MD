@@ -113,6 +113,14 @@ app.$root == app  true
 
 在某组件下的子节点
 
+##### app.$attrs
+
+*包含了父作用域中不被props接收拿到的 (class 和 style 除外)。当一个组件没有声明任何 props 时，这里会包含所有父作用域的绑定 (class 和 style 除外)，并且可以通过 v-bind=”$attrs” 传入内部组件——在创建更高层次的组件时非常有用。*
+
+##### app.$listeners
+
+包含了父作用域中的 (不含 .native 修饰器的) 所有v-on 事件。它可以通过 v-on=”$listeners” 传入内部组件——在创建更高层次的组件时非常有用*
+
 ##### app.$slots
 
   插槽
@@ -2279,8 +2287,88 @@ module.exports = {
 
 <https://blog.csdn.net/zamamiro/article/details/70172900> 
 
+#### git命令
+
+密钥配对<https://blog.csdn.net/u013778905/article/details/83501204> 
+
+1.克隆到本地 git clone  xxx
+
+2.创建本地仓库 git init
+
+git status 用于显示工作目录和暂存区的状态。使用此命令能看到那些修改被暂存到了, 哪些没有, 哪些文件没有被Git tracked到。
+git add . 把代码添加到Git的缓冲区
+git commit -m 'xxx' 提交代码并编写日志
+
+创建远程仓库（在github上）
+
+先关联 git remote add origin < remote-project-repository-address > 
+
+比如git remote add origin https://github.com/heqiliao007/xxx
+
+再推送
+
+git push origin master提交代码至线上
+
+	//多人开发 
+	git branch //查看分支
+	git checkout -b xxx新创建一个分支
+	git checkout xxx 切换到某个分支  
+	
+	git diff //查看不同
+	git add .
+	git commit -m "提交信息"//提交信息
+	git push origin xxx分支 //提交到远程xxx分支
+	
+	git checkout master // 切换到master分支
+	git pull origin master//先拉取一遍别人可能更新了
+	
+	git merge origin/xxx分支 // 把xxx分支上新增的内容合并到master分支上
+	git push // 把master分支的内容提交到线上git push origin master
+	
+	//git 如何在A分支merge B分支的单个文件
+	git checkout -p B file.txt
+	
+	git reset --soft HEAD^ //撤销本次提交，将本地仓库回滚到上一个版本，工作区和暂存区不变。
+	HEAD^表示上个提交版本，HEAD^^表示上上个提交版本，HEAD~n代表前面第n个版本
+
+gitbash 不能复制粘贴的使用快捷键 Ctrl/Shift+Insert 
+
 ### rollup打包
 
 功能单一但极致，可集成可拓展
 
 wangEditor集成用的rollup+gulp
+
+### 权限控制
+
+简单权限控制
+
+iview-admin
+
+ https://blog.csdn.net/qq_43436432/article/details/84374700 
+
+ canTurnTo会通过第二个参数（用户的权限字段列表）进行匹配，如果当前页面，当前用户是有权限的，显示当前页面，否则跳转到401页面 
+component，代表组件级别的路由权限  为true，代表可以访问这个页面
+为false代表访问不了
+这种方式有一个弊端，路由实例里每一个路由都要有一个name
+并且不能和path重复
+
+ 进行权限过滤时候，过滤的就是routerMap数组，匹配不到直接显示404页面 
+
+### **编辑配置editorconfig** 
+
+最外层新建.editorconfig 搭配VScode插件**EditorConfig for VS Code**配置编辑器习惯，有了这个插件配置才会起作用
+
+```
+#开启
+root = true
+#所有文件都有效
+[*]
+charset = utf-8
+#缩进
+indent_style = space/tabs
+#缩进尺寸
+indent_size = 2
+.....
+```
+
