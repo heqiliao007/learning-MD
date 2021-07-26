@@ -406,3 +406,6 @@ WeixinJSBridge.invoke('getBrandWCPayRequest',{
 	</script>
 ```
 
+### api相关
+
+https://www.cnblogs.com/lhl66/category/1111674.html
