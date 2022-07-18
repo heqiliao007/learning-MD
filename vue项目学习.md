@@ -1,6 +1,8 @@
-### 自学vue项目笔记
+## vue项目笔记
 
-#### 初始化项目
+### 创建项目
+
+#### 1.初始化项目
 
 **vue-cli2.0**
 
@@ -52,9 +54,9 @@ ps：一个坑
 
 
 
-#### 打包发布 
+#### 2.打包发布 
 
-vue-cli2.0
+**vue-cli2.0**
 
 npm run build打包  生成的文件在dist下
 
@@ -119,13 +121,15 @@ public用require引入或者import是base64格式
 一般项目里用import引入....后续再研究图片的打包路径问题...
 
 
-#### 目录结构 
+#### 3.目录结构 
 
-public下
+**public下**
 favicon.ico是网址上方的标题的小图标。
 index.html：是入口文件模板。
 
-最外层新建.editorconfig 搭配VScode插件EditorConfig for VS Code配置编辑器习惯
+**editorconfig** 
+
+最外层新建.editorconfig 搭配VScode插件**EditorConfig for VS Code**配置编辑器习惯，有了这个插件配置才会起作用
 
 ```
 #开启
@@ -140,10 +144,15 @@ indent_size = 2
 .....
 ```
 
+**vue.config.js**
+
 根文件目录下vue.config.js
+
 ```
+//引入node path模块
 const path = require('path')
 const resolve = dir => path.join(__dirname, dir)
+//项目基本路径 如果是生产环境 具体路径  如果是开发环境 / 
 const BASE_URL = process.env.NODE_ENV === 'production' ? '/iview-admin/' : '/'
 module.exports = {
   lintOnSave: true,
@@ -151,24 +160,27 @@ module.exports = {
   // vuecli3.0配置相对路径
   chainWebpack: config => {
     config.resolve.alias
+      //表示当前路由拼接上了src
       .set('@', resolve('src'))
       .set('_c', resolve('src/components')
   },
   //打包时不生成map文件 可以减少打包体积
   production:false，
+  //跨域  写下需要代理的url
   devServer: {
     proxy: "http://localhost:888"
   }
 }
 ```
 
-src目录下
+**src目录下**
 
-项目配置新建config配置文件夹新建index.js
-在其他文件夹引入import config from './comfig'即可引入
-或者vue.config.js
+新建config配置文件夹，这里面可以放各种配置文件
 
-api 交互
+例如新建index.js
+在其他文件夹引入import config from './config'即可引入
+
+**api 交互**
 
 common/assets 静态资源文件夹 font/img/stylus
 
@@ -179,56 +191,40 @@ filters自定义过滤器
 direction 自定义指令
 
 mock 模拟数据
-下载mockjs -save-dev
+下载mockjs --save-dev
 
 pages /views页面组件
 
-lib/util文件夹下分类放通用方法和与自己项目有关的业务方法
+lib/util.js文件夹下分类放与自己项目有关的业务方法
+
+lib/tools.js放通用方法或者说工具方法
 
 mock 模拟数据
 
 pages/views 页面
 
-store vuex相关
-文件夹下mutations、actions、state、index.js分类，再分模块modules
+store文件夹 vuex相关
+文件夹下mutations.js、actions.js、state.js、index.js分类
+再分模块modules，比如用户模块，新建user.js 定义state、getters、mutations、actions
 
 router文件夹下放路由文件，抽离出index.js和router.js
-```
-index.js
-import Vue from 'vue'
-import Router from 'vue-router'
-import Routes from './router'
-
-Vue.use(Router)
-
-export default new Router({
-    routes
-})
-
-
-router.js
-import Home from './views/Home.vue'
-export default [
-  {
-     path: '/',
-     name: 'home',
-     component:Home
-  },
-  {
-     path: '/about',
-     name: 'aoout',
-     component: () => import('@/views/About.vue')
-  }
-]
-```
+router.js放路由列表，index.js下去做一些路由拦截并引入路由列表
 
 App.vue 应用组件
 
 main.js入口
 
+eslint规则
+https://blog.csdn.net/weixin_41767649/article/details/90115453
+规则可以写在package.json里或者单独写.eslintrc.js
+例如"rules": {"space-before-function-paren": ["error", "never"]}
 
+修复eslint报错
+package.json修改为：（中间插入–fix）
+lint": "eslint --fix --ext .js,.vue src test/unit"，
+2、终端运行npm run lint修改代码样式
 
-#### 项目准备
+#### 4.项目准备
 
 stylus、less、sass需要下载依赖包
 
@@ -331,362 +327,49 @@ cli3.0
 
 vue.config.js里配置搭配webpack4
 
+### vue组件相关
 
+#### 1. 函数式组件 
 
-ps：flex布局左右布局
+Vue.js 组件提供了一个 functional 开关，设置为 true 后，就可以让组件变为无状态、无实例的函数化组件。因为只是函数，所以渲染的开销相对来说，较小。
+函数化的组件中的 Render 函数，提供了第二个参数 context 作为上下文，data、props、slots、children 以及 parent 都可以通过 context 来访问
 
-display: flex;
-
--webkit-box-align: stretch;
-
--ms-flex-align: stretch;
-
-align-items: stretch;
-
-
-
-
-经常用到的flex布局
-{
-
-	display: flex;
-
-	flex-direction: column;
-
-	align-items: center;
-
-	justify-content: center
-
-	{
-   		flex:1   //所有的子元素平均分配
- 	}
-
+```
+export default {
+    functional: true,
+    props: {
+        name: String, // 组件渲染的文字内容
+        renderFunc: Function // 传入的render函数
+    },
+    /**
+     * render渲染函数
+     * @param {Function} h - render函数的回调方法，用于生成dom节点
+     * @param {Object} ctx - 指代当前的这个对象
+     */
+    render: (h, ctx) => {
+        return ctx.props.renderFunc(h, ctx.props.name)
+    }
 }
+```
 
-#### 关于路由 router 
+### 登陆/登出以及JWT认证
 
-在main.js new Vue中如果去配了它 有以下作用 
+https://www.kancloud.cn/wangjiachong/vue_notes/2033892
 
-多了几个标签
+### 权限控制
 
-keep-alive 
+简单权限控制
 
- router-link（跳转）  相当于a标签
+iview-admin
 
-router-view（显示，这个可以为单标签）视图渲染
+ https://blog.csdn.net/qq_43436432/article/details/84374700 
 
-多了两个属性可以访问 $router 和 $route
+ canTurnTo会通过第二个参数（用户的权限字段列表）进行匹配，如果当前页面，当前用户是有权限的，显示当前页面，否则跳转到401页面 
+component，代表组件级别的路由权限  为true，代表可以访问这个页面
+为false代表访问不了
+这种方式有一个弊端，路由实例里每一个路由都要有一个name
+并且不能和path重复
 
-- 如果是param则动态路由必须带上参数
+ 进行权限过滤时候，过滤的就是routerMap数组，匹配不到直接显示404页面 
 
-  如果是query则不用带
 
-- 如果是路由视图，就有父子路由，页面的区分比如主页就这样靠路由区分
-
-##### 动态路由匹配
-
-
-
-#### tab组件
-
-：表示动态
-
-![](.\vue-img\1.JPG)
-
-this.$router.replace() 
-
-##### linkActiveClass 两种方式
-
-![1566485425461](.\vue-img\25.JPG)
-
-![或者](.\vue-img\26.JPG)
-
-#### 公共组件
-
-slot占位  不同slot通过name属性识别
-
-![](.\vue-img\3.JPG)
-
-用组件：引入、注册、使用标签
-
-![](.\vue-img\2.JPG)
-
-#### swiper组件
-
-在适用页去引入  或者在main.js全局引入
-
-![](.\vue-img\6.JPG)
-
-container包含两部分东西 wrapper和pagination
-
-![](.\vue-img\4.JPG)
-
-保证new Swiper时页面已经渲染了  用mounted
-
-![](.\vue-img\5.JPG)
-
-
-
-#### 路由组件
-
-登录 返回上一级$router.back()
-
-当前 路由器 $route（对象）
-
-当前 路由 $route（对象）
-
-如果给路由添加元素域meta （对象）
-
-
-
-![](.\vue-img\7.JPG)
-
-空对象就为false，就不加
-
-![](.\vue-img\8.JPG)
-
-- [x] v-show表示有这个组件 只是不显示
-
-  
-
-#### 封装axios
-
-npm i --save axios
-
-return new Promise是因为不同promise返回数据不一样   相当于是在axios外面再去返回response.data 简化外部调用
-
-异步返回的数据是response.data而不是response
-
-![](.\vue-img\9.JPG)
-
-![](.\vue-img\10.JPG)
-
-
-
-封装接口请求函数
-
-param参数 /xx/这种形式
-
-query ？id=？这种形式
-
-一个参数传两个 用对象 两个属性
-
-![](.\vue-img\11.JPG)
-
-
-
-#### 配置代理（跨域）
-
-去哪儿网和此项目都是在config/index.js下去配置代理
-
-服务器端去“欺骗浏览器端”
-
-![](.\vue-img\13.JPG)
-
-![](.\vue-img\12.JPG)
-
-##### async函数
-
-变成 ==》》async函数（异步）返回一个 Promise 对象，可以使用then方法添加回调函数。**当函数执行的时候，一旦遇到await就会先返回，等到异步操作完成，再接着执行函数体内后面的语句** 
-
-![](.\vue-img\14.JPG)
-
-1、await必须在async里面
-
-2、async作用于函数
-
-3、async返回一个promise对象
-
-遇到了await, await 表示等一下，代码就暂停到这里，不再向下执行了，它等什么呢？等后面的promise对象执行完毕，然后拿到promise resolve 的值并进行返回，返回值拿到之后，它继续向下执行 
-
-
-
-易混淆：created:在模板渲染成html前调用，即通常初始化某些属性值，然后再渲染成视图。
-
-mounted:在模板渲染成html后调用，通常是初始化页面完成后，再对html的dom节点进行一些需要的操作。
-
-
-
-#### vuex（为了更好异步显示）
-
-安装vuex
-
-核心管理对象 store
-
-状态对象  state
-
-操作对象 actions 通过mutations间接更新多个方法的对象
-
-直接更新state的多个方法的对象 mutations
-
-基于state的getter计算属性的对象 getters
-
-包含N个mutation的type名称常量mutation-types
-
-![](.\vue-img\22.JPG)
-
-引入模块并配置 声明使用 index.js
-
-![](.\vue-img\14.JPG)
-
-1.state.js
-
-![](.\vue-img\15.JPG)
-
-2.mutation-type.js
-
-![](.\vue-img\16.JPG)
-
-3.mutations.js
-
-![](.\vue-img\17.JPG)
-
-需要接收的是包含数据和传递数据的对象！
-
-4.actions.js
-
-![](.\vue-img\18.JPG)
-
-![](.\vue-img\19.JPG)
-
-![](.\vue-img\20.JPG)
-
-![](C:\Users\Administrator\Pictures\vue\21.JPG)
-
-##### 封装接口请求函数里获取接口方法
-
-!
-
-
-
-dispatch=》commit
-
-2种方式 dispatch或者映射函数（这个是在app.vue中，地址是全局信息  在mouted去发请求获取）
-
-![](.\vue-img\23.JPG)
-
-![](.\vue-img\24.JPG)
-
-总结：1.在methods  中mapActions（实际就是触发dispatch）调用action去发起请求获取数据
-
-间接的方式 在actions.js中去发ajax请求获取result.data==去commit给mutation的值，再在mutation里去更新状态，数据存到vuex的state中  2.读状态mapState（在computed里去读取） 3.渲染
-
-
-
-#### 轮播swiper部分异步显示数据
-
-#### bug解决 $nextTick
-
-轮播swiper要在创建显示之后
-
-监视categorys  并且要在异步更新界面之后执行
-
-![1565530109049](C:\Users\ADMINI~1\AppData\Local\Temp\1565530109049.png)
-
-
-
-#### 列表等待效果（类似骨架屏）
-
-![1565531435428](C:\Users\ADMINI~1\AppData\Local\Temp\1565531435428.png)
-
-![1565531594592](C:\Users\ADMINI~1\AppData\Local\Temp\1565531594592.png)
-
-
-
-
-
-#### 登录模块--切换登录方式
-
-两种情况 布尔值
-
-class对象表达式
-
-样式切换
-
-![1565542477690](C:\Users\ADMINI~1\AppData\Local\Temp\1565542477690.png)
-
-![1565542404567](C:\Users\ADMINI~1\AppData\Local\Temp\1565542404567.png)
-
-内容切换
-
-![1565542627102](C:\Users\ADMINI~1\AppData\Local\Temp\1565542627102.png)
-
-
-
-合法手机号
-
-![1565543328207](C:\Users\ADMINI~1\AppData\Local\Temp\1565543328207.png)
-
-![1565543359425](C:\Users\ADMINI~1\AppData\Local\Temp\1565543359425.png)
-
-#### 倒计时效果
-
-阻止默认行为
-
-![1565627549840](C:\Users\ADMINI~1\AppData\Local\Temp\1565627549840.png)
-
-![1565628094700](C:\Users\ADMINI~1\AppData\Local\Temp\1565628094700.png)
-
-有时间的情况下才能点击
-
-![1565628168336](C:\Users\ADMINI~1\AppData\Local\Temp\1565628168336.png)
-
-#### 密码显示隐藏
-
-![1565629623069](C:\Users\ADMINI~1\AppData\Local\Temp\1565629623069.png)
-
-![1565629350765](C:\Users\ADMINI~1\AppData\Local\Temp\1565629350765.png)
-
-小球移动 向右 正
-
-![1565629517266](C:\Users\ADMINI~1\AppData\Local\Temp\1565629517266.png)
-
-
-
-
-#### git命令
-
-密钥配对<https://blog.csdn.net/u013778905/article/details/83501204> 
-
-1.克隆到本地 git clone  xxx
-
-2.创建本地仓库 git init
-
-git status 用于显示工作目录和暂存区的状态。使用此命令能看到那些修改被暂存到了, 哪些没有, 哪些文件没有被Git tracked到。
-git add . 把代码添加到Git的缓冲区
-git commit -m 'xxx' 提交代码并编写日志
-
-创建远程仓库（在github上）
-
-先关联 git remote add origin < remote-project-repository-address > 
-
-比如git remote add origin https://github.com/heqiliao007/xxx
-
-再推送
-
-git push origin master提交代码至线上
-
-	//多人开发 
-	git branch //查看分支
-	git checkout -b xxx新创建一个分支
-	git checkout xxx 切换到某个分支  
-	
-	git diff //查看不同
-	git add .
-	git commit -m "提交信息"//提交信息
-	git push origin xxx分支 //提交到远程xxx分支
-	
-	git checkout master // 切换到master分支
-	git pull origin master//先拉取一遍别人可能更新了
-	
-	git merge origin/xxx分支 // 把xxx分支上新增的内容合并到master分支上
-	git push // 把master分支的内容提交到线上git push origin master
-	
-	//git 如何在A分支merge B分支的单个文件
-	git checkout -p B file.txt
-	
-	git reset --soft HEAD^ //撤销本次提交，将本地仓库回滚到上一个版本，工作区和暂存区不变。
-	HEAD^表示上个提交版本，HEAD^^表示上上个提交版本，HEAD~n代表前面第n个版本
-## 补充
-
-<https://www.cnblogs.com/jlliu/p/11165741.html> 

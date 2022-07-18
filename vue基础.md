@@ -1,4 +1,4 @@
-### 一.vue实例
+一.vue实例
 
 new出来的即为实例
 
@@ -112,6 +112,14 @@ app.$root == app  true
 ##### app.$children
 
 在某组件下的子节点
+
+##### app.$attrs
+
+*包含了父作用域中不被props接收拿到的 (class 和 style 除外)。当一个组件没有声明任何 props 时，这里会包含所有父作用域的绑定 (class 和 style 除外)，并且可以通过 v-bind=”$attrs” 传入内部组件——在创建更高层次的组件时非常有用。*
+
+##### app.$listeners
+
+包含了父作用域中的 (不含 .native 修饰器的) 所有v-on 事件。它可以通过 v-on=”$listeners” 传入内部组件——在创建更高层次的组件时非常有用*
 
 ##### app.$slots
 
@@ -504,8 +512,6 @@ v-model功能
 
 ![](.\vue-img\vue基础\27.JPG)
 
-![1566494936193](C:\Users\ADMINI~1\AppData\Local\Temp\1566494936193.png)
-
 ![](.\vue-img\vue基础\28.JPG)
 
 
@@ -514,13 +520,83 @@ v-model功能
 
 ![](.\vue-img\vue基础\29.JPG)
 
-### 九.高级属性
+### 九.状态管理bus的使用
+
+#### 单向数据流
+
+```
+<template>
+  <input @input="handleInput" :value="value"/>
+</template>
+<script>
+export default {
+  name: 'AInput',
+  props: {
+    value: {
+      type: [String, Number],
+      default: ''
+    }
+  },
+  methods: {
+    handleInput (event) {
+      const value = event.target.value
+      this.$emit('input', value)
+    }
+  }
+}
+</script>
+
+父组件：
+<a-input v-model="stateValue"/>
+v-model实际上相当于t<a-input @input="handleInput" :value="inputValue"/>
+data () {
+    return {
+      inputValue: ''
+    }
+},
+methods: {
+    handleInput (val) {
+      this.inputValue = val
+    }
+}
+```
+
+#### 状态管理bus
+
+```
+main.js
+import Bus from './lib/bus'
+Vue.prototype.$bus = Bus
+
+bus.js
+import Vue from 'vue'
+const Bus = new Vue()
+export default Bus
+
+组件
+<button @click="handleClick">按我</button>
+methods: {
+    handleClick () {
+    //兄弟组件传值
+      this.$bus.$emit('on-click', 'hello')
+    }
+}
+
+另一兄弟组件中：监听
+this.$bus.$on('on-click', mes => {
+      this.message = mes
+})
+```
+
+ // "lint": "vue-cli-service lint",
+
+### 十.高级属性
 
 #### 1.具名插槽
 
-![](.\vue-img\vue基础\30JPG.JPG)
+封装的组件中： <slot name="title"></slot>
 
-![](.\vue-img\vue基础\31.JPG)
+则引用组件的文件中可以写 <template slot="content">  xxx.... </template>
 
 #### 2.作用域插槽slot-scope
 
@@ -536,13 +612,9 @@ v-model功能
 
 ![](.\vue-img\vue基础\35.JPG)
 
-![](C:\Users\Administrator\Pictures\vue\vue基础\36.JPG)
-
 第一个refs是一个实例，第二个是一个节点
 
 也可以直接在ref上打印变量或方法，但不推荐直接以ref的改变实例的方式去使用变量或方法，因为你可以用props去操控组件
-
-![](C:\Users\Administrator\Pictures\vue\vue基础\37.JPG)
 
 实际开发中，作用域插槽一般应用于某些ui框架组件的自定义部分
 
@@ -578,7 +650,7 @@ defineProperty给data指定value，相当于子（孙）组件每次调用value�
 
 以上方法并不是很推荐，因为以后的vue版本很有可能被改写
 
-### 十.render function
+### 十一.render function
 
 #### 1.渲染过程
 
@@ -624,19 +696,48 @@ domProps
 
 ![](.\vue-img\vue基础\52.JPG)
 
-### 十一.vue-router
+### 十二.vue-router
 
 vue-router自动在url后加#，默认hash模式
 
-#### 1.默认路由跳转redirect
+#### 1.重定向redirect
 
-![](.\vue-img\vue基础\53.JPG)
+```
+  {
+    path: '/main',
+    name: 'main',
+    meta: {
+      title: 'main'
+    },
+    redirect: to => '/'
+    /*或者redirect: to => {
+    	return ‘/’
+    }*/
+    //to是代表当前要访问的页面的路由对象
+  },
+```
 
 #### 2.history
 
+无刷新页面
+
 加了这个后 路径不会带#，这个模式需要后端配合匹配所有的路由 
 
-![](.\vue-img\vue基础\54.JPG)
+```
+export default new Router({
+  routes,
+  mode: 'history'
+})
+```
+
+匹配不到路由资源会有问题，所以应该匹配到404 ，一定要定义到最后
+
+```
+ {
+    path: '*',
+    component: () => import('@/views/error_404.vue')
+ }
+```
 
 #### 3.base
 
@@ -700,15 +801,30 @@ savedPosition：记录滚动条滚动的位置
 
 用于history模式，有些浏览器不支持情况下，vue 会自动 fallback 到 hash 模式 
 
-#### 8.meta
+#### 8.meta路由元信息
 
 和 HTML 中 header 部分的 meta 页面原信息类似，例如 description 有助于 seo 等，一般和路由没什么关系的配置可以写在这
 
-meta: { title: 'this is app', description: 'xxx' } 
+to.meta && setTitle(to.meta.title)
 
-#### 9.子路由 children
+#### 9.子路由 children/嵌套路由
 
  子路由使用，需要再上一级路由页面加上 router-view 显示，也就是嵌套路由的概念
+
+children写path的时候不需要加/，vue路径会自动加上  完整的路径应该是父path+子path
+
+```
+ children: [
+      {
+        path: 'table',
+        name: 'table_page',
+        meta: {
+          title: '表格'
+        },
+        component: () => import('@/views/table.vue')
+      },
+ ]
+```
 
 #### 10.transition
 
@@ -727,9 +843,48 @@ css部分：
   transition: opacity  0.3s
 .fade-enter, .fade-leave-to
   opacity : 0
+  
+  
+//过渡组 为某个页面设置特定的动效
+<transition-group :name="routerTransition">
+    <router-view key="default"/>
+    <router-view key="email" name="email"/>
+    <router-view key="tel" name="tel"/>
+</transition-group>
+
+
+data () {
+    return {
+    	routerTransition: ''
+    }
+},
+watch: {
+    '$route' (to) {
+    	//url拼接是query参数后 有了transition的名字
+		to.query && to.query.transitionName && (this.routerTransition =  to.query.transitionName)
+    }
+},  
+.router-enter{
+  opacity: 0;
+}
+.router-enter-active{
+  transition: opacity 1s ease;
+}
+.router-enter-to{
+  opacity: 1;
+}
+.router-leave{
+  opacity: 1;
+}
+.router-leave-active{
+  transition: opacity 1s ease;
+}
+.router-leave-to{
+  opacity: 0;
+}
 ```
 
-#### 11.传递参数（编程时导航）
+#### 11.传递参数（编程式导航）
 
 path不能和param一起，否则param将不生效
 
@@ -744,9 +899,28 @@ router.push({ path: 'register', query: { plan: 'private' }})
 router.push({ path: `/user/${userId}` }) // -> /user/123
 ```
 
-#### 12.接收参数
+#### 12.动态路由匹配
 
-$this.route  
+```
+{
+    path: 'params/:id',
+    name: 'params',
+    meta: {
+    	title: '参数'
+    },
+    component: () => import('@/views/argu.vue')
+}
+```
+
+push和relpace区别
+
+ router.push 会向 history 栈添加一个新的记录，当用户点击浏览器后退按钮时，则回到之前的 URL
+
+ router.replace 导航后不会留下 history 记录。即使点击返回按钮也不会回到这个页面 
+
+#### 13.接收参数
+
+$this.route  代表路由对象
 
 $this.route .param
 
@@ -758,150 +932,438 @@ $this.route .query
 
 一个 key/value 对象，表示 URL 查询参数。例如，对于路径 `/foo?user=1`，则有 `$route.query.user == 1`，如果没有查询参数，则是个空对象 
 
-#### 13.props
+#### 14.路由组件传参---props解耦
 
-![](.\vue-img\vue基础\62.JPG)
+- 布尔类型---动态路由匹配
 
-props为true时，把id作为props传入todo组件，更解耦并且更灵活
+  props为true时，把id作为props传入todo组件，更解耦并且更灵活
 
-![](.\vue-img\vue基础\63.JPG)
+```
+{
+        path: 'params/:id',
+        name: 'params',
+        meta: {
+          title: '参数'
+        },
+        component: () => import('@/views/argu.vue'),
+        props: true
+}
+```
 
-#### 14.vouter-view
+- 对象模式
+
+```
+{
+    path: '/about',
+    name: 'about',
+    component: () => import(/* webpackChunkName: "about" */ '@/views/About.vue'),
+    props: {
+      food: 'banana'
+    }
+ },
+```
+
+- 函数模式
+
+```
+{
+    path: '/about',
+    name: 'about',
+    component: () => import(/* webpackChunkName: "about" */ '@/views/About.vue'),
+    props: route => {
+    	food: route.query.food
+    }
+ },
+ 
+ 组件中
+ props:{
+ 	food:{
+ 		type:String,
+ 		default:'apple'
+ 	}
+ }
+```
+
+#### 15.router-view 命名视图
+
+视图渲染组件
 
 当有多个router-view时，用components，可以适用于上中下，左右布局
 
-![](.\vue-img\vue基础\64.JPG)
-
-#### 15.导航守卫
-
-1.在router的index.js中 全局路由有以下几个导航钩子
-
-router.beforeEach((to,from,next))=>{})中执行next()，路由才会跳转
-
-before可以做校验，可以用于用户登录验证
-
-![](.\vue-img\vue基础\65.JPG)
-
-router.beforeResolve(to,from,next))=>{})
-
-跳转完成后的执行函数，没有next了
-
-router.afterEach(to,from))=>{})
-
-2.在路由配置中，路由钩子beforeEnter 进入某个路由之前才会被调用，它的执行顺序在beforeEach和beforeResolve之间
-
-![](.\vue-img\vue基础\66.JPG)
-
-3.组件路由中
-
-只有beforeRouteEnter钩子没有this
+显示多个试图
 
 ```
-router.beforeRouteEnter((to,from,next))=>{
-
-next()
-
-})
-
-router.beforeRouteUpdate((to,from,next))=>{
-
-next()
-
-})
-
-router.beforeRouteLeave((to,from,next))=>{
-
-next()
-
-})
-
+{
+    path: '/named_view',
+    name: 'named_view',
+    meta: {
+      title: 'named_view'
+    },
+    components: {
+      default: () => import('@/views/child.vue'),
+      email: () => import('@/views/email.vue'),
+      tel: () => import('@/views/tel.vue')
+    }
+  }
 ```
 
-![](.\vue-img\vue基础\68.JPG)
+#### 16.导航守卫
 
-执行顺序
+##### 全局守卫
 
-跳到默认页
+  在router的index.js中 全局路由有以下几个导航钩子
 
-beforeRouteLeave=》beforeEach=》beforeResolve=》afterEach
+- router.beforeEach
 
-跳到另一个页面
+  router.beforeEach((to,from,next))=>{})中执行next()，路由才会跳转
 
-beforeEach=》beforeEnter=》beforeRouteEnter=》beforeResolve=》afterEach
+  to、from都是路由对象
 
-![](.\vue-img\vue基础\67.JPG)
+  beforeEach可以做校验，可以用于用户登录验证
 
-全局》路由配置》组件
+  ```
+  const HAS_LOGINED = false
+  
+  router.beforeEach((to, from, next) => {
+    to.meta && setTitle(to.meta.title)
+       if (to.name !== 'login') {
+         if (HAS_LOGINED) next() //如果已经登录 默认跳到登陆页
+         else next({ name: 'login' })
+       } else {
+         if (HAS_LOGINED) next({ name: 'home' })
+         else next()
+      }
+  }
+  ```
 
-router.beforeRouteUpdate：同样的组件在不同的复用下（同样的路由形式切换），比如每次id有变化时去进行数据更新，不用watch，减小开销或者获取出错撤销
+- router.beforeResolve
 
-next操作
+  在导航被确认之前（所有钩子都结束）触发
 
-![](.\vue-img\vue基础\69.JPG)
 
-用beforeRouteLeave去控制离开
+​       router.beforeResolve(to,from,next))=>{})
 
-![](.\vue-img\vue基础\70.JPG)
+- router.afterEach 后置钩子，不能对跳转页面进行操作
 
-#### 16.异步组件
+  跳转完成后的执行函数，没有next了：router.afterEach(to,from))=>{})
+  
+  ```
+  一般可用于处理loading
+  router.afterEach((to, from, next) => {
+    loading = false
+  }
+  ```
+
+##### 路由独享守卫
+
+​	在路由配置中，路由钩子beforeEnter 进入某个路由之前才会被调用，它的执行顺序在beforeEach和	beforeResolve之间
+
+```
+{
+    path: '/login',
+    name: 'login',
+    meta: {
+      title: '登录'
+    },
+    component: () => import('@/views/login.vue'),
+    beforeEnter: (to, from, next) => {
+    	if (form.name === 'login') console.log('这不是登陆页来的')
+    	next()
+    }
+}
+```
+
+##### 组件内的守卫
+
+- 只有beforeRouteEnter钩子没有this，还没有渲染，可以用vm参数，vm为组件实例
+- router.beforeRouteUpdate：同样的组件在不同的复用下（同样的路由形式切换），比如每次id有变化时去进行数据更新，不用watch，减小开销或者获取出错撤销
+
+```
+{
+    //xx组件,data\props.....
+    beforeRouteEnter(to, from, next) {
+    	next(vm => {
+    	
+    	})
+    },
+    beforeRouteLeave (to, from, next) {
+        // const leave = confirm('您确定要离开吗？')
+        // if (leave) next()
+        // else next(false)
+        next()
+    },
+    //路由发生变化，组件被复用时调用（同一url传参改变时适用）
+    beforeRouteUpdate (to, from, next) {
+        console.log(to.name, from.name)
+        next()
+    }
+}
+```
+
+##### 完整的导航解析流程
+
+ * 1. 导航被触发
+ * 2. 在失活的组件（即将离开的页面组件）里调用离开守卫 beforeRouteLeave
+ * 3. 调用全局的前置守卫 beforeEach
+ * 4. 在重用的组件里调用 beforeRouteUpdate
+ * 5. 调用路由独享的守卫 beforeEnter
+ * 6. 解析异步路由组件
+ * 7. 在被激活的组件（即将进入的页面组件）里调用 beforeRouteEnter
+ * 8. 调用全局的解析守卫 beforeResolve
+ * 9. 导航被确认
+ * 10. 调用全局的后置守卫 afterEach（所有导航钩子完成）
+ * 11. 触发DOM更新
+ * 12. 用创建好的实例调用beforeRouterEnter守卫里传给next的**回调函数**
+
+#### 17.异步组件/路由懒加载
+
+只有访问到这个页面时，才会加载到这个路由
 
 首屏加载的时候，速度更快，component接收的是一个函数
 
-![](.\vue-img\vue基础\72.JPG)
+```
+/*代表注释*/
+
+component: () => import(/* webpackChunkName: "about" */ '@/views/About.vue')
+```
 
 插件babel-plugin-syntax-dyntax-dynamic-import去识别这种引用语法
 
 ![](.\vue-img\vue基础\73.JPG)
 
+#### 18.router-link
 
+tag代表真实标签
 
-### 十二.vuex
+```
+<router-link tag="li" to="/about">
+  <a>About</a>
+</router-link>
+```
 
-#### 1.基础结构
+#### 19.别名 *alias* 
 
-单向数据流
+```
+{
+  path: '/admin',
+  component: AdminPanel,
+  alias: '/manage'
+}
+```
 
-首先在main.js引入store
+### 十三.vuex
 
-![](.\vue-img\vue基础\74.JPG)
+#### 1.单向流程
 
-commit去改变
+ dispatch触发actions   commit触发mutations，mutations去改变state的状态
 
-getters相当于computed
+在store文件下创建index.js  new Vuex.Store定义各个流程
 
-引入各个流程的文件后直接缩写声明
+```
+在main.js文件中引入store
 
-![](.\vue-img\vue基础\75.JPG)
+import store from './store'
+
+new Vue中注册
+
+new Vue({
+  router,
+  store,
+  created () {
+    bootstrap()
+  },
+  render: h => h(App)
+}).$mount('#app')
+```
 
 #### 2.state和getters
 
 两个帮助方法mapState，mapGetters辅助函数，都写在computed里
 
-...这种结构扩展运算符（使用一个工具函数将多个对象合并为一个，以使我们可以将最终对象传给 `computed` 属性 
+...这种结构扩展运算符（使用一个工具函数将多个对象合并为一个，以使我们可以将最终对象传给 `computed` 属性 ） 本身vue不支持 ，框架里.babelrc引入了babel-preset-stage-1
 
-） 本身vue不支持 ，框架里.babelrc引入了babel-preset-stage-1
+##### state
 
-使用mapState后如果同名 使用数组
+```
+//state
+//组件中
+import { mapState, mapGetters, mapMutations, mapActions } from 'vuex'
+computed: {
+	appName () {
+	  //获取根组件的state
+      return this.$store.state.appName
+    },
+    //获取模块中的state user模块
+    userName () {
+       return this.$store.state.user.userName
+    },
+    //解构赋值写法 展开操作符
+    //数组写法 同名可以写出这种 即命名名字和state里的名字一致
+    ...mapState([
+      'userName'
+      //如果不同名，字符串写法
+      anotherName：'userName'
+    ]),
+    //对象写法
+    ...mapState({
+      appName: state => state.appName,
+      //模块下写法
+      userName: state => state.user.userName
+    }),
+}
+//vuex如果在模块中使用了命名空间，此模块更加密闭，不受干扰
+export default {
+    namespaced: true,
+    getters,
+    state,
+    mutations,
+    actions
+}
 
-![](.\vue-img\vue基础\77.JPG)
+```
 
-如果不同名，使用字符串形式
+##### createNamespacedHelpers
 
-![](.\vue-img\vue基础\78.JPG)
+```
+//另一种模块下的state写法，
+import {createNamespacedHelpers } from "vuex";
+const {mapState,mapGetters} = createNamespacedHelpers("user");
+//第一个参数是可选的,传入模块名
+//在 user 中查找
+...mapState({
+    appName: state => state.appName
+}),
+```
 
-**更好的方式，使用方法**
+##### getter
 
-![](.\vue-img\vue基础\79.JPG)
+```
 
-mapGetters1和2方式一样
+//getter vuex中的getter相当于组件里的计算属性
+//在store里新建getters.js
+const getters = {
+  appNameWithVersion: (state) => {
+    //这里appName依赖于state中的字段
+    return `${state.appName}v2.0`
+  }
+}
+export default getters
 
-![](.\vue-img\vue基础\80.JPG)
+//在vuex的user模块下定义getter
+const getters = {
+  firstLetter: (state) => {
+  	//获取userName的
+    return state.userName.substr(0, 1)
+  }
+}
+
+//组件中使用getter
+appNameWithVersion () {
+	//获取根组件的getters
+   return this.$store.getters.appNameWithVersion
+},
+//mapGetters函数中获取根组件的getters
+...mapGetters([
+    'appNameWithVersion'
+]),
+//获取user模块中的getters  没有开启命名空间的前提下，也可以不用写模块名
+...mapGetters([
+    'firstLetter'
+]),
+//开启命名空间后，
+...mapGetters('user',[
+    'firstLetter'
+]),
+//或者
+...mapGetters([
+    'user/firstLetter'
+]),
+
+//createNamespacedHelpers里
+import {createNamespacedHelpers } from "vuex";
+const {mapState,mapGetters} = createNamespacedHelpers("user");
+...mapGetters('user',[
+    'firstLetter'
+]),
+```
 
 #### 3.mutation和action
 
+dispatch触发action ，多用于异步请求
+
 commit触发mutation
 
-commit只能传2个参数（payload）
+getters、mutations、actions不需要写模块名，vuex自动注册为全局，除非你想给它注册单独的命名空间
+
+##### mutation
+
+```
+//mutation
+//store.js下新建mutation.js
+import vue from 'vue'
+const mutations = {
+  SET_APP_NAME (state, params) {
+    //如果用写法2、3 就要写params.appName，如果是写法1  则直接=params即可
+    state.appName = params.appName
+    //如果用对象的写法 ，那么这个params参数就是一个对象，第一个参数就是type
+  },
+  SET_APP_VERSION (state) {
+  	//如果state部分没有定义appVersion，则必须使用vue.set来进行新的值的视图更新
+    vue.set(state, 'appVersion', 'v2.0')
+  },
+  SET_STATE_VALUE (state, value) {
+    state.stateValue = value
+  }
+}
+export default mutations
+
+//组件中
+handleChangeAppName () {
+	//写法1 无参数
+	this.$store.commit('SET_APP_NAME'),
+    //写法2
+    //这种写法只有2个参数
+	this.$store.commit('SET_APP_NAME',{
+         appName: 'newAppName'
+     })
+     //写法3  对象的写法可以有多个参数
+	 this.$store.commit({
+         type: 'SET_APP_NAME',
+         appName: 'newAppName',
+         .....
+     })
+}
+
+//mutation辅助函数
+import { mapMutations, mapActions } from 'vuex'
+ methods: {
+     ...mapMutations([
+          'SET_USER_NAME'
+    ]),
+    handleChangeAppName () {
+        //可以直接引用mutation中的函数
+        this.SET_USER_NAME('vue-cource')
+        //或者
+        this.SET_USER_NAME({
+            appName: 'vue-cource'
+        })
+    },
+}
+//模块中的mutations  user模块中
+const mutations = {
+  SET_USER_NAME (state, params) {
+    state.userName = params
+  },
+  SET_RULES (state, rules) {
+    state.rules = rules
+  }
+}
+//组件中使用  getters、mutations、actions不需要写模块名，vuex自动注册为全局，除非你想给它注册单独的命名空间
+this.SET_USER_NAME({
+   appName: 'vue-cource'
+})
+
+```
 
 如果是多个参数，可以弄成一个对象
 
@@ -915,19 +1377,74 @@ commit只能传2个参数（payload）
 
 严格模式只能在开发环境加这个，加了后就不能直接改
 
+##### action
+
+当 mutation 触发的时候，回调函数还没有被调用 
 mutation里只能放同步更新的代码，如果有异步的代码（比如数据请求）要去action里，用dispatch触发action
 
-![](.\vue-img\vue基础\86.JPG)
+```
+const actions = {
 
-![](C:\Users\Administrator\Pictures\vue\vue基础\87.JPG)
+ updateAppName ({ commit }) {
+    getAppName().then(res => {
+    //res.info.appName 就是 appName
+      const { info: { appName } } = res
+      commit('SET_APP_NAME', appName)
+    }).catch(err => {
+      console.log(err)
+    })
+  }
+  //await写法
+  async updateAppName ({ commit }) {
+    try {
+      const { info: { appName } } = await getAppName()
+      commit('SET_APP_NAME', appName)
+    } catch (err) {
+      console.log(err)
+    }
+  }
+}
 
-mapMutations和mapActions写在methods里
+//api.js模拟接口请求
+export const getAppName = () => {
+  return new Promise((resolve, reject) => {
+    const err = null
+    setTimeout(() => {
+      if (!err) resolve({ code: 200, info: { appName: 'newAppName' } })
+      else reject(err)
+    })
+  })
+}
 
-![](.\vue-img\vue基础\90.JPG)
 
-![](C:\Users\Administrator\Pictures\vue\vue基础\89.JPG)
+//组件中
+ methods: {
+ 	//方式二
+    ...mapActions([
+        'updateAppName'
+    ]),
+    changeName(){
+    	//方式一 直接使用dispatch
+    	this.$store.dispatch('updateAppName', '123')
+    	//调用mapActions里的函数
+    	this.updateAppName('123')
+    }
+}
 
-#### 4.vuex模块
+//模块如果有namespaced  要加上模块名
+...mapActions('user',[
+    'updateAppName'
+]),
+//或者用createNamespacedHelpers
+import {createNamespacedHelpers } from "vuex";
+const { mapActions } = createNamespacedHelpers("user");
+//第一个参数是可选的,传入模块名
+...mapActions([
+	'updateAppName'
+]),
+```
+
+#### 4.vuex模块module
 
 namespaced: true, 
 
@@ -935,43 +1452,77 @@ namespaced: true,
 
 ![](.\vue-img\vue基础\91.JPG)
 
-![](.\vue-img\vue基础\92.JPG)
-
-getters：
-
-![](.\vue-img\vue基础\94.JPG)
-
-![](.\vue-img\vue基础\93.JPG)
 
 用以上数组的方式不好用模板语法，因此更改为对象形式
 
 ![](.\vue-img\vue基础\95.JPG)
 
-拿到全局模式下的state或其他模块的state
+##### **拿到全局模式下的state或其他模块的state**
 
 getters方法内第二个参数是所有getter方法，第三个参数rootState是全局的state方法
 
+```
+getters: {
+    sumWithRootCount (state, getters, rootState, rootGetters) {
+      return state.count + rootState.count
+    }
+}
+```
+
 actions里方法第一个参数是ctx，这是个store对象，包含state，commit，rootState
 
-![](.\vue-img\vue基础\100.JPG)
+```
+const actions = {
+  updateUserName ({ commit, state, rootState, dispatch }) {
+    // rootState.appName 根vuex里的state
+  },
+  updateUserName ({ ctx, dispatch }) {
+  }
+}
+```
 
-![](.\vue-img\vue基础\96.JPG)
+如果你要调用其他模块或者全局里的mutations或action，需要加root:true，不然会报错（前提是声明了namespaced: true）
 
-要注意此时commit的updateText是默认action这个所在的命名空间里的updateText
-
-如果你要调用其他模块或者全局里的mutations，需要加root:true，不然会报错（前提是声明了namespaced: true）
-
-![](.\vue-img\vue基础\97.JPG)
-
-![](.\vue-img\vue基础\98.JPG)
-
-![](.\vue-img\vue基础\101.JPG)
-
-![](.\vue-img\vue基础\99.JPG)
-
-还可以模块下增加模块
+```
+ dispatch('someOtherAction', null, { root: true }) 
+```
 
 ##### 动态注册模块
+
+模块下增加模块
+
+```
+//xx.vue组件中
+registerModule () {
+    this.$store.registerModule('todo', {
+        state: {
+        	//一个数组
+            todoList: [
+                '学习mutations',
+                '学习actions'
+            ]
+        }
+    })
+	//给user模块添加一个todo模块
+    this.$store.registerModule(['user', 'todo'], {
+        state: {
+        	//一个数组
+            todoList: [
+                '学习mutations',
+                '学习actions'
+            ]
+        }
+    })
+},
+
+computed: {
+    ...mapState({
+      todoList: state => state.user.todo ? state.user.todo.todoList : [],
+    }),
+}
+```
+
+**全局注册**
 
 在index.js中全局路由去添加
 
@@ -1017,7 +1568,7 @@ if (module.hot) {
 
 ![](.\vue-img\vue基础\104.JPG)
 
-![](.\vue-img\105.JPG)
+![](.\vue-img\vue基础\105.JPG)
 
 #### 6.store.watch
 
@@ -1029,17 +1580,13 @@ if (module.hot) {
 
 #### 7.store.subscribe订阅
 
-制作一些插件时
+制作一些插件时，每次提交mutation后拿到回调函数
 
 ![](.\vue-img\vue基础\107.JPG)
 
-拿到回调函数，type打印调用了哪个mutation
+type打印调用了哪个mutation
 
 payload打印接收（传入）的参数
-
-![](.\vue-img\vue基础\82.JPG)
-
-![](.\vue-img\vue基础\108.JPG)
 
 store.subscribeAction
 
@@ -1047,7 +1594,100 @@ store.subscribeAction
 
 #### 8.plugin
 
-![](.\vue-img\vue基础\110.JPG)
+vuex存到内存，想将它存到本地--------持久化存储，
+
+```
+//plugins.js
+export default store => {
+  //当本地有存储的state，转成对象，替换掉实例中的store-----replaceState
+  if (localStorage.state) store.replaceState(JSON.parse(localStorage.state))
+  store.subscribe((mutation, state) => {
+    //对象转成字符串再存储
+    localStorage.state = JSON.stringify(state)
+  })
+}
+
+//index.js
+import saveInLocal from './plugin/saveInLocal'
+Vue.use(Vuex)
+export default new Vuex.Store({
+  strict: false,
+  state,
+  getters,
+  mutations,
+  actions,
+  plugins: [ saveInLocal ]
+})
+```
+
+#### 9.严格模式
+
+```
+export default new Vuex.Store({
+  //如果是开发环境 严格模式开启，如果为生产环境 关掉，这样就不会报错
+  strict: process.env.NODE_ENV === 'development',
+  state,
+  getters,
+  mutations,
+  actions,
+  plugins: [ saveInLocal ]
+})
+
+//strict: true表示要在mutation里设置state的值
+//process.env属性在Node中返回一个包含用户环境信息的对象，NODE_ENV是用户一个自定义的变量，在webpack中它的用途是判断生产环境或开发环境的依据的
+```
+
+#### 10.vuex双向绑定的问题
+
+```
+//state
+const state = {
+  appName: 'admin',
+  stateValue: 'abc'
+}
+
+//mutation
+const mutations = {
+  SET_STATE_VALUE (state, value) {
+    state.stateValue = value
+  }
+}
+
+//组件中
+<template>
+	//方式一
+  <input @input="handleStateValueChange" :value="value"/>
+  
+  	//方式二
+  <input v-model="stateValue"/>
+</template>
+
+<script>
+methods: {
+    ...mapMutations([
+          'SET_STATE_VALUE'
+    ]),
+    //方式一
+    handleStateValueChange (val) {
+        this.SET_STATE_VALUE(val)
+    }
+}
+
+//方式二
+computed: {
+	stateValue: {
+          get () {
+            return this.$store.state.stateValue
+          },
+          set (val) {
+            this.SET_STATE_VALUE(val)
+          }
+    },
+}
+</script>
+```
+
+
 
 ### 十三.混入mixin
 
@@ -1193,8 +1833,6 @@ list是个数组进行遍历
 
 对比新旧vnode，第一次没有对比的时候把旧cnode全部渲染在vm.$el
 
-![1574971705738](C:\Users\ADMINI~1\AppData\Local\Temp\1574971705738.png)
-
 **流程**
 
 - updateComponent中实现了vdom的patch
@@ -1210,6 +1848,108 @@ list是个数组进行遍历
 ![](.\img\17.JPG)
 
 ![](.\img\18.JPG)
+
+### 十五.axios理解
+
+解决跨域
+
+代理
+
+```
+'/filesystem': {
+    target: 'http://192.168.0.200:21771/FileSystem',
+    ws: false,
+    changeOrigin: true,
+    pathRewrite: {
+    	'^/filesystem': ''
+    }
+},
+```
+
+封装axios
+
+```
+//使用
+import axios from './index'
+
+export const getUserInfo = ({ userId }) => {
+  return axios.request({
+    url: '/index/getUserInfo',
+    method: 'post',
+    data: {
+      userId
+    }
+  })
+}
+
+
+//index.js
+import HttpRequest from '@/lib/axios'
+const axios = new HttpRequest()
+export default axios
+
+//axios.js
+import axios from 'axios'
+import { baseURL } from '@/config'
+import { getToken } from '@/lib/util'
+class HttpRequest {
+  constructor (baseUrl = baseURL) {
+  	//基本路径
+    this.baseUrl = baseUrl
+    this.queue = {}
+  }
+  getInsideConfig () {
+  	//全局的一些配置
+    const config = {
+      baseURL: this.baseUrl,
+      headers: {
+        //
+      }
+    }
+    return config
+  }
+  distroy (url) {
+    delete this.queue[url]
+    if (!Object.keys(this.queue).length) {
+      // Spin.hide()
+    }
+  }
+  //拦截器方法
+  interceptors (instance, url) {
+    instance.interceptors.request.use(config => {
+      // 添加全局的loading...
+      if (!Object.keys(this.queue).length) {
+        // Spin.show()
+      }
+      this.queue[url] = true
+      config.headers['Authorization'] = getToken()
+      return config
+    }, error => {
+      return Promise.reject(error)
+    })
+    instance.interceptors.response.use(res => {
+      this.distroy(url)
+      const { data } = res
+      return data
+    }, error => {
+      this.distroy(url)
+      return Promise.reject(error.response.data)
+    })
+  }
+  request (options) {
+    const instance = axios.create()
+    options = Object.assign(this.getInsideConfig(), options)
+    //添加一个拦截器
+    this.interceptors(instance, options.url)
+    return instance(options)
+  }
+}
+export default HttpRequest
+```
+
+Mock.js模拟请求
+
+
 
 ### 补充：Webpack4搭建项目
 
@@ -1547,8 +2287,88 @@ module.exports = {
 
 <https://blog.csdn.net/zamamiro/article/details/70172900> 
 
+#### git命令
+
+密钥配对<https://blog.csdn.net/u013778905/article/details/83501204> 
+
+1.克隆到本地 git clone  xxx
+
+2.创建本地仓库 git init
+
+git status 用于显示工作目录和暂存区的状态。使用此命令能看到那些修改被暂存到了, 哪些没有, 哪些文件没有被Git tracked到。
+git add . 把代码添加到Git的缓冲区
+git commit -m 'xxx' 提交代码并编写日志
+
+创建远程仓库（在github上）
+
+先关联 git remote add origin < remote-project-repository-address > 
+
+比如git remote add origin https://github.com/heqiliao007/xxx
+
+再推送
+
+git push origin master提交代码至线上
+
+	//多人开发 
+	git branch //查看分支
+	git checkout -b xxx新创建一个分支
+	git checkout xxx 切换到某个分支  
+	
+	git diff //查看不同
+	git add .
+	git commit -m "提交信息"//提交信息
+	git push origin xxx分支 //提交到远程xxx分支
+	
+	git checkout master // 切换到master分支
+	git pull origin master//先拉取一遍别人可能更新了
+	
+	git merge origin/xxx分支 // 把xxx分支上新增的内容合并到master分支上
+	git push // 把master分支的内容提交到线上git push origin master
+	
+	//git 如何在A分支merge B分支的单个文件
+	git checkout -p B file.txt
+	
+	git reset --soft HEAD^ //撤销本次提交，将本地仓库回滚到上一个版本，工作区和暂存区不变。
+	HEAD^表示上个提交版本，HEAD^^表示上上个提交版本，HEAD~n代表前面第n个版本
+
+gitbash 不能复制粘贴的使用快捷键 Ctrl/Shift+Insert 
+
 ### rollup打包
 
 功能单一但极致，可集成可拓展
 
 wangEditor集成用的rollup+gulp
+
+### 权限控制
+
+简单权限控制
+
+iview-admin
+
+ https://blog.csdn.net/qq_43436432/article/details/84374700 
+
+ canTurnTo会通过第二个参数（用户的权限字段列表）进行匹配，如果当前页面，当前用户是有权限的，显示当前页面，否则跳转到401页面 
+component，代表组件级别的路由权限  为true，代表可以访问这个页面
+为false代表访问不了
+这种方式有一个弊端，路由实例里每一个路由都要有一个name
+并且不能和path重复
+
+ 进行权限过滤时候，过滤的就是routerMap数组，匹配不到直接显示404页面 
+
+### **编辑配置editorconfig** 
+
+最外层新建.editorconfig 搭配VScode插件**EditorConfig for VS Code**配置编辑器习惯，有了这个插件配置才会起作用
+
+```
+#开启
+root = true
+#所有文件都有效
+[*]
+charset = utf-8
+#缩进
+indent_style = space/tabs
+#缩进尺寸
+indent_size = 2
+.....
+```
+

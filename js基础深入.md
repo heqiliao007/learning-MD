@@ -5,7 +5,7 @@
 #### **1.1js中使用typeof能得到哪些类型**？
 
 ```
-答案：string、number、boolean、object、function、undefined
+constructor 答案：string、number、boolean、object、function、undefined
 考点：js变量类型
 
 补充：js 数据类型共7种  number,string,boolean,null,undefined,引用数据类型(Array,Object,Function)，Symbol (ES6 新增，表示独一无二的值)
@@ -207,9 +207,9 @@ JSON.parse 把将字符串转化json对象
 
 - 所有的引用类型(数组，对象，函数)，都具有对象特性，即可自由扩展属性（除了null）
 - 所有的引用类型（数组，函数，对象），都有一个 ____proto____属性，属性值是一个普通对象
-- 所有的**函数**，都有一个 prototype 属性，属性值也是一个普通的对象，这个**prototype**        指的就是**原型对象**
+- 所有的**函数**，都有一个 prototype 属性，属性值也是一个普通的对象，这个**prototype** 指的就是**原型对象**
 - 函数的 **prototype** 称**显式原型**，引用类型的**____proto____** 成为**隐式原型**
-- 所有的引用类型（数组，函数，对象），其____proto____  属性值都指向(等于)其构造函数的 prototype 属性值
+- **所有的引用类型（数组，函数，对象）/ 实例对象**，其____proto____  属性值都指向**(等于)**其**构造函数的 prototype** 属性值
 - 当试图获取一个对象的某个属性时，如果这个对象本身没有这个属性，那么会去它的____proto____ (即它的构造函数的prototype)中寻找
 
 - 原型对象（构造函数.prototype）的____proto____指向的是Object的prototype
@@ -825,11 +825,14 @@ typeof无法判断 数组 返回为object
 
 - 待同步函数执行完毕，轮询执行异步队列的函数
 
-- **js在执行宏任务前先会把微任务执行完清空,执行完一个宏任务去清空一次微任务** 
+   https://segmentfault.com/a/1190000021445387?utm_source=sf-related 
+
+- js在执行宏任务前先会把微任务执行完清空,(微任务优先级更高) 
 
   - 宏任务:代码块，setTimeout，setInterval等,宏任务是放到事件触发队列里面的
-
   - 微任务:Promise，process.nextTick等,是放到微任务队列里面的
+  
+  https://segmentfault.com/a/1190000019415672 
 
 ```
 {
@@ -1774,6 +1777,7 @@ status
       CND加速主要是加速静态资源，如网站上面上传的图片、媒体，以及引入的一些Js、css等文件。
       CND加速需要依靠各个网络节点，会从最近的节点返回资源，这是核心。
       CND服务器通过缓存或者主动抓取主服务器的内容来实现资源储备。
+  
   <script>可以用于JSONP
 
 #### 4.1手动编写一个ajax，不依赖于第三方库
@@ -2362,9 +2366,11 @@ Cache-Control      Cahe-Control : Max-age=3600 //浏览器的相对时间 单位
 
 和服务器协商这个文件能不能用，过期没有
 
+![1616407211845](..\learning-MD\img\huancun.png)
+
 ```
-Last-Modified If-Modified-Since   Last-Modified:Wed,26 Jan 2017 00:35:11 GMT
-Etag   If-None-Match  
+Last-Modified / If-Modified-Since  http1.0  Last-Modified:Wed,26 Jan 2017 00:35:11 GMT
+Etag / If-None-Match  http1.1
 /*
 Last-Modified 请求资源的最后修改时间 (服务器下发的上次修改的时间)
 If-Modified-Since浏览器端缓存页面的最后修改时间一起发到服务器去，服务器会把这个时间与服务器上实际文件的最后修改时间进行比较 与Last-Modified同一个value值
@@ -2384,6 +2390,9 @@ Cache-Control
 Last-Modified
 Etag
 If-None-Match
+
+这几个缓存的优先级如下：
+cache-control > expires > Etag > last-modified
 ```
 
 ### 错误监控
@@ -2429,14 +2438,35 @@ If-None-Match
    // GETxxx ERROR    
 ```
 
-#### **延伸：跨域JS运行错误可以捕获吗，错误提示是什么，应该怎么处理？** 
+3.promise错误
+
+```
+// 监听 promise 错误 缺点是获取不到行数数据
+            addEventListener('unhandledrejection', e => {
+                monitor.errors.push({
+                    type: 'promise',
+                    msg: (e.reason && e.reason.msg) || e.reason || '',
+                    // 错误发生的时间
+                    time: new Date().getTime(),
+                })
+
+                console.log('所有的错误信息')
+                console.log(monitor.errors)
+            })
+
+            return monitor
+        }
+```
+
+
+
+#### 延伸：跨域JS运行错误可以捕获吗，错误提示是什么，应该怎么处理？** 
 
 因为跨域没有权限，只能捕获到这个错误，但是没拿到相应的具体信息
 ![](.\img\9.JPG)
 
  **需要这样处理之后就可以拿到详细信息：**
  1.在script标签增加crossorigin属性（在客户端做的）
-
  2.设置JS资源响应头Access-control-Allow-origin；*（在服务端做的）
  在响应JS资源的http头上加一个Access-control-Allow-origin，也可以是指定域名
 
@@ -2899,7 +2929,6 @@ HEAD------------获取报文首部
 
 ```
 1xx: 提示信息--表示请求已接收，继续处理
-
 2xx：成功--表示请求已被成功接收
 200 OK：客户端请求成功
 206 Partial Content：客户端发送了一个带有Range（范围）头的GET请求，服务器完成了它
@@ -2958,7 +2987,7 @@ HEAD------------获取报文首部
 
 ##### **借助构造函数实现继承** 
 
-缺点：只实现了部分继承，如果父类的属性都在构造函数上，那没有问题；如果父类的原型对象上还有方法，子类是拿不到这些方法的
+缺点：只实现了部分继承，如果父类的属性都在构造函数上，那没有问题；如果父类的原型对象上还有方法（原型链的方法），子类是拿不到这些方法的
 
 ```
 function Parent1(){
@@ -2974,7 +3003,7 @@ function Child(){
 console.log(new Child());//Child {name: "parent1", type: "child1"}
 ```
 
-##### **借助原型链实现继承（弥补构造函数实现继承不足）** 
+##### **借助原型链实现继承（弥补构造函数实现继承不足）** ----可忽略 无意义
 
 缺点：在一个类上实例了两个对象，改第一个对象的属性，第二个对象也跟着改变；
 引起这个问题的原因：原型链上的原型对象是共用的；
@@ -3027,7 +3056,7 @@ console.log(s4.constructor);//Parent3
 ----因为prototype直接拿的父类的实例，它没有自己的constructor，它的constructor是从这个实例中继承的，也就是原型链上一级拿过来的，它拿过来的肯定是父类的constructor
 ```
 
-##### **组合继承的优化** 
+##### **组合继承的优化** (常用)
 
 缺点：子类的constructor不是自己的，而是父类的
 
@@ -3074,7 +3103,7 @@ function Child5(){
     this.type="Child5";
 }
     
-//Object.create(Parent5.prototype)；创建中间对象方法，就把两个原型对象区分开，这个中间对象还具备一个特性就是它的原型对象是父类的原型对象，这样在原型链上又开始连起来了。
+//Object.create(Parent5.prototype);创建中间对象方法，就把两个原型对象区分开，这个中间对象还具备一个特性就是它的原型对象是父类的原型对象，这样在原型链上又开始连起来了。
 
 Child5.prototype = Object.create(Parent5.prototype);
 //child = Object.create(Parent5)
@@ -3088,50 +3117,6 @@ parent.play.push(4);
 console.log(parent,child); //Parent5 {name: "name", play: Array(4)}   //Child5 {name: "name", play: Array(3), type: "Child5"}
 console.log(child.constructor); //Child5
 ```
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -3320,5 +3305,61 @@ Referer指的是页面来源，如果服务器判断页面来的是不是我的�
 - **CSRF利用你本身的漏洞，去帮你自动执行那些接口。**
 - **这两种攻击方式是不一样的，CSRF要依赖用户要登录网站**
 
-#### 
+#### 前端设计模式
 
+ https://www.cnblogs.com/smlp/p/9776789.html 
+ 设计模式是命名、抽象和识别对可重用的面向对象设计有用的的通用设计结构
+
+1. 单例模式 
+
+   ```
+   //一个实例，并提供一个访问它的全局访问点
+   ```
+
+2. 工厂模式 
+
+   ```
+   //工厂模式 工厂函数就是做一个对象创建的封装，并将创建的整个对象return出去
+   ```
+
+3. 构造函数模式 
+
+   ```
+    // 使用new关键字来调用该函数，我们可以告诉Javascript把这个函数当做一个构造器来用,属性用this,它可以用自己所定义的成员来初始化一个对象
+   ```
+
+4. 发布订阅模式 
+
+   ```
+      /*
+          订阅发布模式又称为观察者模式，定义了一种一对多的关系，让多个观察者同时监听某一个主题对象，
+          这个主题对象的状态发生改变时就会通知所有的观察者对象。
+      */
+      // 订阅/发布模式  发布者发出通知 => 主题对象收到通知并推送给订阅者 => 订阅者执行相应的操作
+      // 一个发布者，功能就是负责发布消息 - publish
+   ```
+
+    5.策略模式 
+
+   ```
+   //采用很多方法实现同一个目标
+   /*
+   策略模式的优点:
+       1. 策略模式利用组合、委托和多态等技术和思想，可以有效地避免多重条件选择语句
+       2. 策略模式提供了对开放-封闭原则的完美支持，将算法封装在独立的 strategy 中，使得它们易于切换，易于理解，易于扩展
+   策略模式的缺点:
+       1. 会在程序中增加许多策略类或者策略对象，但实际上比把他们负责的逻辑堆砌在 Context 中要好
+       2. 使用策略模式，必须了解所有的策略，才能更好的选择一个合适的策略
+   */
+   ```
+
+   6.代理模式
+
+   ```
+   /*
+   在某些情况下，一个对象不适合或者不能直接引用另一个对象，而代理对象可以在客户端和目标对象之间起到中介作用。
+   使用代理的原因是我们不愿意或者不想对原对象直接进行操作
+   */
+   ```
+
+   
