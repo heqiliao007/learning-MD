@@ -406,3 +406,72 @@ WeixinJSBridge.invoke('getBrandWCPayRequest',{
 	</script>
 ```
 
+### wx小程序
+
+#### 编辑器
+
+可选择微信开发者工具或者第三方编辑器，如vscode，可以下载wx相关插件配合编写代码，只适用于编辑代码
+
+#### 小程序基础
+
+##### 文件类型与组织结构
+
+**page构成**
+样式 wxss
+骨架 wxmls
+业务 js
+配置 json（不是必须）
+json文件无法注释，会报错
+最后一行无逗号
+双引号
+
+**全局文件**
+app.json 
+app.wxss
+app.js
+
+**环境配置**
+自动生成
+project.config.json
+
+**utils**
+自定义文件夹，工具方法之类的，也可以在每个page下去加util.js文件
+
+**推荐目录结构**
+page---
+	样式 wxss
+	骨架 wxmls
+	业务 js
+	配置 json
+	组件component----
+		样式 wxss
+        	骨架 wxmls
+       	 	业务 js
+        	配置 json
+
+#### 新建页面
+
+ 注册页面
+在app.json
+```
+ "pages":[
+    "pages/index/index",
+    "pages/logs/logs"
+  ],
+```
+
+background只在滑动中显示，下拉刷新那种背景，真机调试中
+
+在app.js
+onLaunch (小程序初始化完成执行该方法)
+
+
+
+配置
+
+| request合法域名    | https://apis.map.qq.com    https://restapi.amap.com           https://wenjiang.xdhzz.com | 一个月内可申请5次修改本月还可修改4次 | [修改](javascript:;) |
+| ------------------ | :----------------------------------------------------------- | ------------------------------------ | -------------------- |
+|                    | wss://wenjiang.xdhzz.com                                     |                                      |                      |
+| uploadFile合法域名 | https://wenjiang.xdhzz.com                                   |                                      |                      |
+
+腾讯云官网 
